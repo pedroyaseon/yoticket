@@ -2,6 +2,13 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { api } from "@/lib/api";
+
+const destinations: Record<string, string> = {
+  ORGANIZER: "/organizer/events",
+  CUSTOMER: "/events",
+  GATE: "/gate",
+};
+
 export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
@@ -19,10 +26,9 @@ export default function LoginPage() {
           }),
         },
       );
-      if (result.user.role !== "ORGANIZER")
-        throw new Error("Use uma conta de organizador para esta área.");
       localStorage.setItem("yoticket.token", result.accessToken);
-      router.push("/organizer/events");
+      localStorage.setItem("yoticket.role", result.user.role);
+      router.push(destinations[result.user.role] ?? "/events");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao entrar.");
     }
@@ -36,7 +42,10 @@ export default function LoginPage() {
         <p className="font-mono text-xs tracking-[.2em] text-[#e76732]">
           YOTICKET / ACESSO
         </p>
-        <h1 className="text-3xl font-semibold">Área do organizador</h1>
+        <h1 className="text-3xl font-semibold">Entre na sua sessão</h1>
+        <p className="text-sm text-[#bdb5a8]">
+          Organizadores, clientes e portaria usam o mesmo acesso.
+        </p>
         <input
           required
           name="email"

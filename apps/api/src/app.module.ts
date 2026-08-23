@@ -6,6 +6,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { EventsModule } from './events/events.module';
+import { ReservationsModule } from './reservations/reservations.module';
+import { PaymentsModule } from './payments/payments.module';
+import { TicketsModule } from './tickets/tickets.module';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { EventsModule } from './events/events.module';
     AuthModule,
     CatalogModule,
     EventsModule,
+    ReservationsModule,
+    PaymentsModule,
+    TicketsModule,
   ],
   controllers: [HealthController],
 })
