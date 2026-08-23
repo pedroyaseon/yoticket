@@ -21,6 +21,23 @@ export class EventsService {
       orderBy: { startsAt: 'asc' },
     });
   }
+  listPublished(query?: string) {
+    return this.prisma.event.findMany({
+      where: {
+        status: EventStatus.PUBLISHED,
+        startsAt: { gte: new Date() },
+        ...(query ? { title: { contains: query, mode: 'insensitive' } } : {}),
+      },
+      orderBy: { startsAt: 'asc' },
+    });
+  }
+  async findPublished(id: string) {
+    const event = await this.prisma.event.findFirst({
+      where: { id, status: EventStatus.PUBLISHED },
+    });
+    if (!event) throw new NotFoundException('Evento não encontrado.');
+    return event;
+  }
   async publish(id: string, organizerId: string) {
     const event = await this.prisma.event.findUnique({ where: { id } });
     if (!event) throw new NotFoundException('Evento não encontrado.');
