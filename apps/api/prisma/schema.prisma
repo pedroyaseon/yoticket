@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ORGANIZER
+  CUSTOMER
+  GATE
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  APPROVED
+  DECLINED
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  CANCELLED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  events       Event[]       @relation("EventOrganizer")
+  reservations Reservation[]
+  tickets      Ticket[]
+}
+
+model Event {
+  id             String        @id @default(cuid())
+  externalId     Int?
+  title          String
+  posterUrl      String?
+  description    String
+  location       String
+  startsAt       DateTime
+  capacity       Int
+  heldQuantity   Int           @default(0)
+  soldQuantity   Int           @default(0)
+  priceInCents   Int
+  status         EventStatus   @default(DRAFT)
+  organizerId    String
+  organizer      User          @relation("EventOrganizer", fields: [organizerId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  reservations   Reservation[]
+  tickets        Ticket[]
+
+  @@index([status, startsAt])
+  @@index([organizerId])
+}
+
+model Reservation {
+  id        String            @id @default(cuid())
+  eventId   String
+  customerId String
+  quantity  Int
+  status    ReservationStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  event     Event             @relation(fields: [eventId], references: [id])
+  customer  User              @relation(fields: [customerId], references: [id])
+  payment   Payment?
+  tickets   Ticket[]
+
+  @@index([eventId, status, expiresAt])
+  @@index([customerId])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  reservationId String        @unique
+  status        PaymentStatus
+  createdAt     DateTime      @default(now())
+  reservation   Reservation   @relation(fields: [reservationId], references: [id])
+}
+
+model Ticket {
+  id            String       @id @default(cuid())
+  eventId       String
+  reservationId String
+  ownerId       String
+  code          String       @unique
+  status        TicketStatus @default(VALID)
+  usedAt        DateTime?
+  createdAt     DateTime     @default(now())
+  event         Event        @relation(fields: [eventId], references: [id])
+  reservation   Reservation  @relation(fields: [reservationId], references: [id])
+  owner         User         @relation(fields: [ownerId], references: [id])
+
+  @@index([eventId, status])
+  @@index([reservationId])
+}
