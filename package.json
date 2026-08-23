@@ -1,0 +1,15 @@
+{
+  "name": "yoticket",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@yoticket/web",
+    "dev:api": "npm run start:dev --workspace=@yoticket/api",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspace=@yoticket/api",
+    "prisma:generate": "npm run prisma:generate --workspace=@yoticket/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=@yoticket/api",
+    "seed": "npm run prisma:seed --workspace=@yoticket/api"
+  }
+}
