@@ -1,4 +1,10 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -22,9 +28,11 @@ export class TicketsController {
     @Param('id') id: string,
     @CurrentUser() u: JwtPayload,
   ) {
-    return this.prisma.ticket.findFirstOrThrow({
+    const ticket = await this.prisma.ticket.findFirst({
       where: { id, ownerId: u.sub },
       include: { event: true },
     });
+    if (!ticket) throw new NotFoundException('Ingresso não encontrado.');
+    return ticket;
   }
 }
