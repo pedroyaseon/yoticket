@@ -80,9 +80,7 @@ export default function MovieDetailPage() {
             .filter((seat) => seat.status === "AVAILABLE")
             .map((seat) => seat.id),
         );
-        setSelected(
-          readSelection(selectedSessionId, availableIds),
-        );
+        setSelected(readSelection(selectedSessionId, availableIds));
 
         const savedReservation = readReservation(selectedSessionId);
         setReservation(savedReservation);
@@ -98,10 +96,7 @@ export default function MovieDetailPage() {
   }, [selectedSessionId]);
 
   useEffect(() => {
-    if (
-      !selectedSessionId ||
-      restoredSession.current !== selectedSessionId
-    )
+    if (!selectedSessionId || restoredSession.current !== selectedSessionId)
       return;
     const key = selectionStorageKey(selectedSessionId);
     if (Object.keys(selected).length) {
@@ -123,7 +118,9 @@ export default function MovieDetailPage() {
   const days = Array.from(
     new Set(venueSessions.map((session) => dayKey(session.startsAt))),
   );
-  const activeDay = activeSession ? dayKey(activeSession.startsAt) : days[0] ?? "";
+  const activeDay = activeSession
+    ? dayKey(activeSession.startsAt)
+    : (days[0] ?? "");
   const daySessions = venueSessions.filter(
     (session) => dayKey(session.startsAt) === activeDay,
   );
@@ -164,7 +161,9 @@ export default function MovieDetailPage() {
   }
 
   function chooseVenue(location: string) {
-    const next = movie?.sessions.find((session) => session.location === location);
+    const next = movie?.sessions.find(
+      (session) => session.location === location,
+    );
     if (next) chooseSession(next);
   }
 
@@ -292,9 +291,16 @@ export default function MovieDetailPage() {
         <SiteHeader />
         <main className="mx-auto max-w-3xl px-5 py-20 sm:px-8">
           <p className="font-mono text-xs text-[#ff5c35]">FILME INDISPONÍVEL</p>
-          <h1 className="mt-4 text-4xl font-semibold">Não encontramos este filme.</h1>
-          <p role="alert" className="mt-5 text-[#aaa59c]">{loadError}</p>
-          <Link href="/events" className="mt-8 inline-block bg-[#ff5c35] px-5 py-3 font-semibold text-black">
+          <h1 className="mt-4 text-4xl font-semibold">
+            Não encontramos este filme.
+          </h1>
+          <p role="alert" className="mt-5 text-[#aaa59c]">
+            {loadError}
+          </p>
+          <Link
+            href="/events"
+            className="mt-8 inline-block bg-[#ff5c35] px-5 py-3 font-semibold text-black"
+          >
             Voltar aos filmes
           </Link>
         </main>
@@ -317,22 +323,58 @@ export default function MovieDetailPage() {
       <main>
         <section className="relative isolate overflow-hidden border-b border-[#29292d]">
           {movie.posterUrl && (
-            <Image src={movie.posterUrl} alt="" fill priority sizes="100vw" className="-z-20 object-cover opacity-15 blur-md" />
+            <Image
+              src={movie.posterUrl}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="-z-20 object-cover opacity-15 blur-md"
+            />
           )}
           <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#0b0b0c_8%,rgba(11,11,12,.9),#0b0b0c_94%)]" />
           <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[250px_minmax(0,1fr)] lg:py-16">
             <div className="relative aspect-[3/4] overflow-hidden border border-white/10 bg-[#1b1b1e]">
-              {movie.posterUrl && <Image src={movie.posterUrl} alt={`Pôster de ${movie.title}`} fill priority sizes="250px" className="object-cover" />}
+              {movie.posterUrl && (
+                <Image
+                  src={movie.posterUrl}
+                  alt={`Pôster de ${movie.title}`}
+                  fill
+                  priority
+                  sizes="250px"
+                  className="object-cover"
+                />
+              )}
             </div>
             <section className="self-end">
-              <Link href="/events" className="text-sm text-[#aaa59c] hover:text-[#ff5c35]">← Voltar aos filmes</Link>
-              <p className="mt-9 font-mono text-xs font-semibold tracking-[.2em] text-[#ff5c35]">EM CARTAZ</p>
-              <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">{movie.title}</h1>
-              <p className="mt-6 max-w-3xl leading-7 text-[#b1aca3]">{movie.description}</p>
+              <Link
+                href="/events"
+                className="text-sm text-[#aaa59c] hover:text-[#ff5c35]"
+              >
+                ← Voltar aos filmes
+              </Link>
+              <p className="mt-9 font-mono text-xs font-semibold tracking-[.2em] text-[#ff5c35]">
+                EM CARTAZ
+              </p>
+              <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
+                {movie.title}
+              </h1>
+              <p className="mt-6 max-w-3xl leading-7 text-[#b1aca3]">
+                {movie.description}
+              </p>
               <div className="mt-8 flex flex-wrap gap-x-10 gap-y-5 border-y border-white/10 py-6">
-                <MovieFact label="Locais" value={`${movie.venues.length} opções`} />
-                <MovieFact label="Sessões" value={`${movie.sessionCount} horários`} />
-                <MovieFact label="Ingressos" value={`A partir de ${formatCurrency(movie.priceFromInCents)}`} />
+                <MovieFact
+                  label="Locais"
+                  value={`${movie.venues.length} opções`}
+                />
+                <MovieFact
+                  label="Sessões"
+                  value={`${movie.sessionCount} horários`}
+                />
+                <MovieFact
+                  label="Ingressos"
+                  value={`A partir de ${formatCurrency(movie.priceFromInCents)}`}
+                />
               </div>
             </section>
           </div>
@@ -340,30 +382,122 @@ export default function MovieDetailPage() {
 
         <section className="border-b border-[#29292d] bg-[#111113]">
           <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8">
-            <p className="font-mono text-xs tracking-[.2em] text-[#ff5c35]">ESCOLHA SUA SESSÃO</p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight">Onde e quando?</h2>
-            <div className="mt-8 grid gap-8 lg:grid-cols-3">
-              <SessionChoice title="Local">
-                {venues.map((venue) => (
-                  <ChoiceButton key={venue} active={venue === activeVenue} disabled={Boolean(reservation)} onClick={() => chooseVenue(venue)}>
-                    {venue}
-                  </ChoiceButton>
-                ))}
-              </SessionChoice>
-              <SessionChoice title="Dia">
-                {days.map((day) => (
-                  <ChoiceButton key={day} active={day === activeDay} disabled={Boolean(reservation)} onClick={() => chooseDay(day)}>
-                    {formatSessionDay(day)}
-                  </ChoiceButton>
-                ))}
-              </SessionChoice>
-              <SessionChoice title="Horário">
-                {daySessions.map((session) => (
-                  <ChoiceButton key={session.id} active={session.id === selectedSessionId} disabled={Boolean(reservation)} onClick={() => chooseSession(session)}>
-                    {formatTime(session.startsAt)}
-                  </ChoiceButton>
-                ))}
-              </SessionChoice>
+            <p className="font-mono text-xs tracking-[.2em] text-[#ff5c35]">
+              ESCOLHA SUA SESSÃO
+            </p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight">
+              Onde e quando?
+            </h2>
+            <div className="mt-8 grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+              <section className="border border-[#303034] bg-[#0d0d0f] p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-[.14em] text-[#aaa59c]">
+                  1. Escolha o local
+                </h3>
+                <div className="mt-4 grid gap-2">
+                  {venues.map((venue) => (
+                    <button
+                      key={venue}
+                      type="button"
+                      disabled={Boolean(reservation)}
+                      aria-pressed={venue === activeVenue}
+                      onClick={() => chooseVenue(venue)}
+                      className={`border px-4 py-3 text-left text-sm transition disabled:opacity-50 ${
+                        venue === activeVenue
+                          ? "border-[#ff5c35] bg-[#ff5c35] font-semibold text-black"
+                          : "border-[#35353a] bg-[#18181b] text-[#bbb6ad] hover:border-[#ff5c35]"
+                      }`}
+                    >
+                      {venue}
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <div className="min-w-0 space-y-4">
+                <section className="border border-[#303034] bg-[#0d0d0f] p-5">
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <h3 className="text-xs font-semibold uppercase tracking-[.14em] text-[#aaa59c]">
+                      2. Escolha a data
+                    </h3>
+                    {days.length > 4 && (
+                      <p className="text-xs text-[#77736d]">
+                        Deslize para ver outras datas →
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-4 overflow-x-auto pb-2 [scrollbar-color:#55555c_#18181b] [scrollbar-width:thin]">
+                    <div className="flex min-w-max gap-2">
+                      {days.map((day) => {
+                        const sessionCount = venueSessions.filter(
+                          (session) => dayKey(session.startsAt) === day,
+                        ).length;
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            disabled={Boolean(reservation)}
+                            aria-pressed={day === activeDay}
+                            onClick={() => chooseDay(day)}
+                            className={`w-36 border px-4 py-3 text-left transition disabled:opacity-50 ${
+                              day === activeDay
+                                ? "border-[#ff5c35] bg-[#ff5c35] text-black"
+                                : "border-[#35353a] bg-[#18181b] text-[#bbb6ad] hover:border-[#ff5c35]"
+                            }`}
+                          >
+                            <span className="block text-xs font-semibold uppercase tracking-[.12em]">
+                              {formatSessionWeekday(day)}
+                            </span>
+                            <span className="mt-1 block text-sm font-semibold">
+                              {formatSessionDate(day)}
+                            </span>
+                            <span
+                              className={`mt-2 block text-xs ${
+                                day === activeDay
+                                  ? "text-black/65"
+                                  : "text-[#77736d]"
+                              }`}
+                            >
+                              {sessionCount}{" "}
+                              {sessionCount === 1 ? "horário" : "horários"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </section>
+
+                <section className="border border-[#303034] bg-[#0d0d0f] p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-[.14em] text-[#aaa59c]">
+                        3. Escolha o horário
+                      </h3>
+                      <p className="mt-2 text-sm text-[#8f8a82]">
+                        {formatSessionDay(activeDay)}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {daySessions.map((session) => (
+                        <button
+                          key={session.id}
+                          type="button"
+                          disabled={Boolean(reservation)}
+                          aria-pressed={session.id === selectedSessionId}
+                          onClick={() => chooseSession(session)}
+                          className={`min-w-20 border px-4 py-3 text-sm transition disabled:opacity-50 ${
+                            session.id === selectedSessionId
+                              ? "border-[#ff5c35] bg-[#ff5c35] font-semibold text-black"
+                              : "border-[#3a3a40] bg-[#18181b] text-[#bbb6ad] hover:border-[#ff5c35]"
+                          }`}
+                        >
+                          {formatTime(session.startsAt)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              </div>
             </div>
           </div>
         </section>
@@ -371,14 +505,30 @@ export default function MovieDetailPage() {
         <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
           <div className="mb-9 flex flex-wrap items-end justify-between gap-5">
             <div>
-              <p className="font-mono text-xs tracking-[.2em] text-[#ff5c35]">ESCOLHA SEU LUGAR</p>
-              <h2 className="mt-3 text-4xl font-semibold tracking-tight">Mapa da sala</h2>
-              <p className="mt-3 text-[#9e9990]">{activeSession.location} · {formatDate(activeSession.startsAt)} · {formatTime(activeSession.startsAt)}</p>
+              <p className="font-mono text-xs tracking-[.2em] text-[#ff5c35]">
+                ESCOLHA SEU LUGAR
+              </p>
+              <h2 className="mt-3 text-4xl font-semibold tracking-tight">
+                Mapa da sala
+              </h2>
+              <p className="mt-3 text-[#9e9990]">
+                {activeSession.location} · {formatDate(activeSession.startsAt)}{" "}
+                · {formatTime(activeSession.startsAt)}
+              </p>
             </div>
             <div className="flex flex-wrap gap-4 text-xs text-[#aaa59c]">
-              <Legend color="bg-[#232328] border-[#55555c]" label="Disponível" />
-              <Legend color="bg-[#ff5c35] border-[#ff5c35]" label="Selecionada" />
-              <Legend color="bg-amber-500/60 border-amber-400" label="Pendente" />
+              <Legend
+                color="bg-[#232328] border-[#55555c]"
+                label="Disponível"
+              />
+              <Legend
+                color="bg-[#ff5c35] border-[#ff5c35]"
+                label="Selecionada"
+              />
+              <Legend
+                color="bg-amber-500/60 border-amber-400"
+                label="Pendente"
+              />
               <Legend color="bg-[#4a2225] border-[#7f3439]" label="Reservada" />
             </div>
           </div>
@@ -390,11 +540,18 @@ export default function MovieDetailPage() {
               ) : (
                 <div className="mx-auto min-w-[420px] max-w-4xl sm:min-w-[690px]">
                   <div className="mx-auto mb-12 h-2 w-3/4 rounded-[50%] bg-[#e7e0d4] shadow-[0_12px_35px_rgba(255,255,255,.18)]" />
-                  <p className="-mt-8 mb-10 text-center font-mono text-[10px] tracking-[.35em] text-[#77736d]">TELA</p>
+                  <p className="-mt-8 mb-10 text-center font-mono text-[10px] tracking-[.35em] text-[#77736d]">
+                    TELA
+                  </p>
                   <div className="space-y-3">
                     {rows.map(([row, seats]) => (
-                      <div key={row} className="flex items-center gap-1 sm:gap-3">
-                        <span className="w-5 text-center font-mono text-xs text-[#77736d]">{row}</span>
+                      <div
+                        key={row}
+                        className="flex items-center gap-1 sm:gap-3"
+                      >
+                        <span className="w-5 text-center font-mono text-xs text-[#77736d]">
+                          {row}
+                        </span>
                         <div className="flex flex-1 justify-center gap-1 sm:gap-2">
                           {seats.map((seat, index) => {
                             const isSelected = Boolean(selected[seat.id]);
@@ -406,13 +563,26 @@ export default function MovieDetailPage() {
                                   ? "cursor-not-allowed border-amber-400 bg-amber-500/60 text-black"
                                   : "cursor-not-allowed border-[#7f3439] bg-[#4a2225] text-[#9e666a]";
                             return (
-                              <button key={seat.id} type="button" disabled={seat.status !== "AVAILABLE" || Boolean(reservation)} aria-pressed={isSelected} aria-label={`Poltrona ${seat.label}, ${isSelected ? "selecionada" : seat.status === "AVAILABLE" ? "disponível" : seat.status === "PENDING" ? "pendente" : "reservada"}`} onClick={() => toggleSeat(seat)} className={`h-7 w-7 rounded-t-md border text-[9px] font-semibold transition sm:h-8 sm:w-10 sm:rounded-t-lg sm:text-[10px] ${index === 2 || index === 9 ? "ml-1 sm:ml-3" : ""} ${style}`}>
+                              <button
+                                key={seat.id}
+                                type="button"
+                                disabled={
+                                  seat.status !== "AVAILABLE" ||
+                                  Boolean(reservation)
+                                }
+                                aria-pressed={isSelected}
+                                aria-label={`Poltrona ${seat.label}, ${isSelected ? "selecionada" : seat.status === "AVAILABLE" ? "disponível" : seat.status === "PENDING" ? "pendente" : "reservada"}`}
+                                onClick={() => toggleSeat(seat)}
+                                className={`h-7 w-7 rounded-t-md border text-[9px] font-semibold transition sm:h-8 sm:w-10 sm:rounded-t-lg sm:text-[10px] ${index === 2 || index === 9 ? "ml-1 sm:ml-3" : ""} ${style}`}
+                              >
                                 {seat.number}
                               </button>
                             );
                           })}
                         </div>
-                        <span className="w-5 text-center font-mono text-xs text-[#77736d]">{row}</span>
+                        <span className="w-5 text-center font-mono text-xs text-[#77736d]">
+                          {row}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -421,27 +591,60 @@ export default function MovieDetailPage() {
             </div>
 
             <aside className="border border-[#3a3a40] bg-[#141416] p-6 lg:sticky lg:top-24">
-              <p className="font-mono text-xs tracking-[.18em] text-[#ff5c35]">SUA RESERVA</p>
-              <h3 className="mt-3 text-2xl font-semibold">{reservation ? "Pagamento pendente" : "Ingressos selecionados"}</h3>
-              <p className="mt-3 text-xs leading-5 text-[#8f8a82]">{activeSession.location}<br />{formatDate(activeSession.startsAt)} · {formatTime(activeSession.startsAt)}</p>
+              <p className="font-mono text-xs tracking-[.18em] text-[#ff5c35]">
+                SUA RESERVA
+              </p>
+              <h3 className="mt-3 text-2xl font-semibold">
+                {reservation ? "Pagamento pendente" : "Ingressos selecionados"}
+              </h3>
+              <p className="mt-3 text-xs leading-5 text-[#8f8a82]">
+                {activeSession.location}
+                <br />
+                {formatDate(activeSession.startsAt)} ·{" "}
+                {formatTime(activeSession.startsAt)}
+              </p>
               {!reservation && selectedSeats.length === 0 && (
-                <div className="mt-6 border border-dashed border-[#3a3a40] p-6 text-center text-sm leading-6 text-[#8f8a82]">Escolha uma poltrona no mapa para montar sua compra.</div>
+                <div className="mt-6 border border-dashed border-[#3a3a40] p-6 text-center text-sm leading-6 text-[#8f8a82]">
+                  Escolha uma poltrona no mapa para montar sua compra.
+                </div>
               )}
               <div className="mt-6 space-y-3">
                 {(reservation?.items ?? selectedSeats).map((item) => {
                   const seat = "seat" in item ? item.seat : item;
                   const type = item.ticketType;
-                  const price = "priceInCents" in item ? item.priceInCents : type === "HALF" ? (seatMap?.prices.half ?? 0) : (seatMap?.prices.full ?? 0);
+                  const price =
+                    "priceInCents" in item
+                      ? item.priceInCents
+                      : type === "HALF"
+                        ? (seatMap?.prices.half ?? 0)
+                        : (seatMap?.prices.full ?? 0);
                   return (
-                    <div key={seat.id} className="border border-[#29292d] bg-[#101012] p-3">
+                    <div
+                      key={seat.id}
+                      className="border border-[#29292d] bg-[#101012] p-3"
+                    >
                       <div className="flex items-center justify-between gap-3">
-                        <div><p className="font-semibold">Poltrona {seat.label}</p><p className="mt-1 text-xs text-[#77736d]">{ticketTypeLabel[type]}</p></div>
-                        <span className="text-sm font-semibold">{formatCurrency(price)}</span>
+                        <div>
+                          <p className="font-semibold">Poltrona {seat.label}</p>
+                          <p className="mt-1 text-xs text-[#77736d]">
+                            {ticketTypeLabel[type]}
+                          </p>
+                        </div>
+                        <span className="text-sm font-semibold">
+                          {formatCurrency(price)}
+                        </span>
                       </div>
                       {!reservation && (
                         <div className="mt-3 grid grid-cols-2 gap-2">
                           {(["FULL", "HALF"] as const).map((option) => (
-                            <button key={option} type="button" onClick={() => changeTicketType(seat.id, option)} className={`border px-2 py-2 text-xs ${type === option ? "border-[#ff5c35] bg-[#ff5c35]/10 text-[#ff7a59]" : "border-[#343439] text-[#8f8a82]"}`}>{ticketTypeLabel[option]}</button>
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => changeTicketType(seat.id, option)}
+                              className={`border px-2 py-2 text-xs ${type === option ? "border-[#ff5c35] bg-[#ff5c35]/10 text-[#ff7a59]" : "border-[#343439] text-[#8f8a82]"}`}
+                            >
+                              {ticketTypeLabel[option]}
+                            </button>
                           ))}
                         </div>
                       )}
@@ -449,20 +652,65 @@ export default function MovieDetailPage() {
                   );
                 })}
               </div>
-              <div className="mt-6 flex items-center justify-between border-t border-[#29292d] pt-5"><span className="text-sm text-[#9e9990]">Total</span><strong className="text-xl">{formatCurrency(reservation?.totalInCents ?? selectionTotal)}</strong></div>
+              <div className="mt-6 flex items-center justify-between border-t border-[#29292d] pt-5">
+                <span className="text-sm text-[#9e9990]">Total</span>
+                <strong className="text-xl">
+                  {formatCurrency(reservation?.totalInCents ?? selectionTotal)}
+                </strong>
+              </div>
               {reservation ? (
                 <>
-                  <p className="mt-3 text-xs leading-5 text-amber-200">Reserva válida até {formatTime(reservation.expiresAt)}. As poltronas permanecem pendentes até o pagamento.</p>
-                  <button type="button" disabled={submitting} onClick={() => void pay("APPROVED")} className="mt-5 w-full bg-[#ff5c35] p-3.5 font-semibold text-black hover:bg-[#ff7655] disabled:opacity-50">{submitting ? "Processando…" : "Finalizar pagamento"}</button>
-                  <button type="button" disabled={submitting} onClick={() => void pay("DECLINED")} className="mt-3 w-full py-2 text-xs text-[#8f8a82] hover:text-white disabled:opacity-50">Simular pagamento recusado</button>
+                  <p className="mt-3 text-xs leading-5 text-amber-200">
+                    Reserva válida até {formatTime(reservation.expiresAt)}. As
+                    poltronas permanecem pendentes até o pagamento.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => void pay("APPROVED")}
+                    className="mt-5 w-full bg-[#ff5c35] p-3.5 font-semibold text-black hover:bg-[#ff7655] disabled:opacity-50"
+                  >
+                    {submitting ? "Processando…" : "Finalizar pagamento"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => void pay("DECLINED")}
+                    className="mt-3 w-full py-2 text-xs text-[#8f8a82] hover:text-white disabled:opacity-50"
+                  >
+                    Simular pagamento recusado
+                  </button>
                 </>
               ) : (
-                <button type="button" disabled={submitting || selectedSeats.length === 0 || authLoading} onClick={() => void reserveSeats()} className="mt-6 w-full bg-[#ff5c35] p-3.5 font-semibold text-black hover:bg-[#ff7655] disabled:opacity-40">{submitting ? "Reservando…" : user ? "Reservar poltronas" : "Entrar para reservar"}</button>
+                <button
+                  type="button"
+                  disabled={
+                    submitting || selectedSeats.length === 0 || authLoading
+                  }
+                  onClick={() => void reserveSeats()}
+                  className="mt-6 w-full bg-[#ff5c35] p-3.5 font-semibold text-black hover:bg-[#ff7655] disabled:opacity-40"
+                >
+                  {submitting
+                    ? "Reservando…"
+                    : user
+                      ? "Reservar poltronas"
+                      : "Entrar para reservar"}
+                </button>
               )}
               {message && (
-                <div role={paymentStatus === "APPROVED" ? "status" : "alert"} className={`mt-5 border p-4 text-sm ${paymentStatus === "APPROVED" ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-200" : "border-amber-500/30 bg-amber-950/20 text-amber-100"}`}>
+                <div
+                  role={paymentStatus === "APPROVED" ? "status" : "alert"}
+                  className={`mt-5 border p-4 text-sm ${paymentStatus === "APPROVED" ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-200" : "border-amber-500/30 bg-amber-950/20 text-amber-100"}`}
+                >
                   <p>{message}</p>
-                  {paymentStatus === "APPROVED" && <Link href="/my-tickets" className="mt-3 inline-block font-semibold text-[#ff7a59]">Abrir meus ingressos →</Link>}
+                  {paymentStatus === "APPROVED" && (
+                    <Link
+                      href="/my-tickets"
+                      className="mt-3 inline-block font-semibold text-[#ff7a59]"
+                    >
+                      Abrir meus ingressos →
+                    </Link>
+                  )}
                 </div>
               )}
             </aside>
@@ -501,7 +749,9 @@ function readSelection(sessionId: string, availableIds: Set<string>) {
 function readReservation(sessionId: string) {
   const key = reservationStorageKey(sessionId);
   try {
-    const parsed = JSON.parse(localStorage.getItem(key) ?? "null") as Reservation | null;
+    const parsed = JSON.parse(
+      localStorage.getItem(key) ?? "null",
+    ) as Reservation | null;
     if (parsed && new Date(parsed.expiresAt) > new Date()) return parsed;
   } catch {
     // A seleção será revalidada pela API; dados locais inválidos são descartados.
@@ -524,18 +774,37 @@ function formatSessionDay(value: string) {
   }).format(new Date(year, month - 1, day));
 }
 
+function formatSessionWeekday(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+    .format(new Date(year, month - 1, day))
+    .replace(".", "");
+}
+
+function formatSessionDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+  }).format(new Date(year, month - 1, day));
+}
+
 function MovieFact({ label, value }: { label: string; value: string }) {
-  return <div><p className="text-xs uppercase tracking-[.12em] text-[#77736d]">{label}</p><p className="mt-2 font-medium">{value}</p></div>;
-}
-
-function SessionChoice({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div><h3 className="text-sm font-semibold uppercase tracking-[.12em] text-[#aaa59c]">{title}</h3><div className="mt-3 flex flex-wrap gap-2">{children}</div></div>;
-}
-
-function ChoiceButton({ active, disabled, onClick, children }: { active: boolean; disabled: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button type="button" disabled={disabled} onClick={onClick} className={`border px-3 py-2.5 text-sm transition disabled:opacity-50 ${active ? "border-[#ff5c35] bg-[#ff5c35] font-semibold text-black" : "border-[#3a3a40] bg-[#18181b] text-[#bbb6ad] hover:border-[#ff5c35]"}`}>{children}</button>;
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-[.12em] text-[#77736d]">
+        {label}
+      </p>
+      <p className="mt-2 font-medium">{value}</p>
+    </div>
+  );
 }
 
 function Legend({ color, label }: { color: string; label: string }) {
-  return <span className="flex items-center gap-2"><span className={`h-4 w-5 rounded-t border ${color}`} />{label}</span>;
+  return (
+    <span className="flex items-center gap-2">
+      <span className={`h-4 w-5 rounded-t border ${color}`} />
+      {label}
+    </span>
+  );
 }

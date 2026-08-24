@@ -41,13 +41,12 @@ export function ScheduleFields({ venues }: { venues: Venue[] }) {
       <label htmlFor="location">
         <span className="mb-2 block text-sm text-[#bbb6ad]">Local</span>
         <input
-          key={venues[0]?.name}
           required
           id="location"
           name="location"
           list="venue-options"
-          defaultValue={venues[0]?.name}
-          placeholder="Nome do cinema ou espaço"
+          defaultValue=""
+          placeholder="Selecione ou informe um local"
           className="w-full border border-[#39393e] bg-[#0b0b0c] p-3.5"
         />
         <datalist id="venue-options">
