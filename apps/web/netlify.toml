@@ -1,0 +1,21 @@
+[build]
+  command = "npm run netlify:build"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[context.production]
+  command = "npm run netlify:build:production"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  external_node_modules = ["@nestjs/core", "@prisma/client", "bcrypt"]
+  included_files = ["node_modules/.prisma/client/**", "apps/api/prisma/**"]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
