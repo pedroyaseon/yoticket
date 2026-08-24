@@ -17,6 +17,11 @@ const venues = [
     name: 'Cinema Yo — Vila Cultural',
     priceAdjustment: -200,
   },
+  {
+    slug: 'cine-horizonte-parque-sul',
+    name: 'Cine Horizonte — Parque Sul',
+    priceAdjustment: 200,
+  },
 ];
 
 const movies = [
