@@ -61,10 +61,6 @@ export default function LoginPage() {
             <h1 className="mt-5 text-5xl font-semibold leading-tight tracking-tight">
               Uma entrada para cada papel.
             </h1>
-            <p className="mt-6 max-w-lg text-lg leading-8 text-[#9e9990]">
-              Clientes compram ingressos, organizadores montam a programação e a
-              portaria valida o acesso.
-            </p>
           </div>
         </section>
         <section className="flex items-center justify-center px-5 py-12 sm:px-8">

@@ -47,3 +47,8 @@ O catálogo TMDb é carregado pelo backend e apresenta filmes em cartaz antes de
 qualquer busca. Eventos do organizador podem ser consultados e editados apenas
 pelo proprietário. A remoção é lógica (`CANCELLED`) para preservar histórico e
 é bloqueada quando existem ingressos vendidos.
+
+A criação de programação recebe uma lista concreta de datas e horários gerada a
+partir do período e dos dias escolhidos. A API bloqueia a linha do organizador,
+rejeita sobreposição e cria todas as sessões e mapas de poltronas em uma única
+transação.

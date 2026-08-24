@@ -15,6 +15,7 @@ import type { JwtPayload } from '../auth/jwt-payload.interface';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateEventDto } from './dto/create-event.dto';
+import { CreateEventScheduleDto } from './dto/create-event-schedule.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventsService } from './events.service';
 
@@ -28,6 +29,12 @@ export class EventsController {
     @Body() input: CreateEventDto,
   ) {
     return this.events.create(user.sub, input);
+  }
+  @Post('events/schedule') createSchedule(
+    @CurrentUser() user: JwtPayload,
+    @Body() input: CreateEventScheduleDto,
+  ) {
+    return this.events.createSchedule(user.sub, input);
   }
   @Get('organizer/events') mine(@CurrentUser() user: JwtPayload) {
     return this.events.listMine(user.sub);

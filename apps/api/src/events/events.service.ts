@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -7,6 +8,7 @@ import {
 import { Event, EventStatus, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { CreateEventScheduleDto } from './dto/create-event-schedule.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { buildSeatMap } from './seat-map';
 
@@ -21,6 +23,58 @@ export class EventsService {
         organizerId,
         seats: { create: buildSeatMap(input.capacity) },
       },
+    });
+  }
+  async createSchedule(organizerId: string, input: CreateEventScheduleDto) {
+    const startsAt = input.startsAt
+      .map((value) => new Date(value))
+      .sort((left, right) => left.getTime() - right.getTime());
+    if (startsAt.some((date) => date <= new Date()))
+      throw new BadRequestException(
+        'Todas as sessões precisam começar no futuro.',
+      );
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${organizerId} FOR UPDATE`;
+      const duplicates = await tx.event.count({
+        where: {
+          organizerId,
+          externalId: input.externalId,
+          location: input.location,
+          startsAt: { in: startsAt },
+          status: { not: EventStatus.CANCELLED },
+        },
+      });
+      if (duplicates > 0)
+        throw new ConflictException(
+          'Uma ou mais sessões já existem neste local e horário.',
+        );
+
+      const events: Event[] = [];
+      for (const sessionStartsAt of startsAt) {
+        events.push(
+          await tx.event.create({
+            data: {
+              externalId: input.externalId,
+              title: input.title,
+              posterUrl: input.posterUrl,
+              description: input.description,
+              location: input.location,
+              startsAt: sessionStartsAt,
+              capacity: input.capacity,
+              priceInCents: input.priceInCents,
+              status: EventStatus.PUBLISHED,
+              organizerId,
+              seats: { create: buildSeatMap(input.capacity) },
+            },
+          }),
+        );
+      }
+      return {
+        count: events.length,
+        firstEventId: events[0].id,
+        startsAt: events.map((event) => event.startsAt),
+      };
     });
   }
   listMine(organizerId: string) {
