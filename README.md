@@ -8,6 +8,17 @@ simulado, emissão de ingressos e validação de entrada.
 
 [Acessar o YoTicket](https://yoticket.netlify.app/events)
 
+## Usuários para teste
+
+Na tela de login, as contas podem ser preenchidas pelos botões de acesso rápido
+ou informadas manualmente. Todas utilizam a senha `demo123`.
+
+| Perfil | E-mail |
+| --- | --- |
+| Cliente | `customer1@demo.com` |
+| Organizador | `organizer@demo.com` |
+| Portaria | `gate@demo.com` |
+
 ## Visão geral
 
 O catálogo público organiza os filmes em cartaz sem confundi-los com as sessões
