@@ -14,7 +14,7 @@
     "build:api": "npm run build --workspace=@yoticket/api",
     "build:web": "npm run build --workspace=@yoticket/web",
     "netlify:build": "npm run prisma:generate && npm run build:api && npm run build:web",
-    "netlify:build:production": "npm run prisma:deploy && npm run seed && npm run netlify:build",
+    "netlify:build:production": "npm run prisma:deploy && npm run prisma:generate && npm run seed && npm run build:api && npm run build:web",
     "prisma:generate": "npm run prisma:generate --workspace=@yoticket/api",
     "prisma:deploy": "npm exec --workspace=@yoticket/api prisma migrate deploy",
     "prisma:migrate": "npm run prisma:migrate --workspace=@yoticket/api",
