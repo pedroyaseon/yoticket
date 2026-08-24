@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -10,6 +11,10 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UsersService } from '../users/users.service';
 
+const BCRYPT_MAX_BYTES = 72;
+const INVALID_PASSWORD_HASH =
+  '$2b$12$cYsZmTfAAIzFFsVsKv8bXe4CjiUPxx8gziQbVVXTQvoWuf9pesA02';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -19,6 +24,9 @@ export class AuthService {
   ) {}
 
   async register(input: RegisterDto) {
+    if (Buffer.byteLength(input.password, 'utf8') > BCRYPT_MAX_BYTES) {
+      throw new BadRequestException('A senha deve possuir no máximo 72 bytes.');
+    }
     const email = input.email.trim().toLowerCase();
     if (await this.users.findByEmail(email))
       throw new ConflictException('Este e-mail já está em uso.');
@@ -29,7 +37,13 @@ export class AuthService {
 
   async login(input: LoginDto) {
     const user = await this.users.findByEmail(input.email.trim().toLowerCase());
-    if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) {
+    const passwordWithinLimit =
+      Buffer.byteLength(input.password, 'utf8') <= BCRYPT_MAX_BYTES;
+    const passwordMatches = await bcrypt.compare(
+      passwordWithinLimit ? input.password : '',
+      user?.passwordHash ?? INVALID_PASSWORD_HASH,
+    );
+    if (!user || !passwordWithinLimit || !passwordMatches) {
       throw new UnauthorizedException('E-mail ou senha inválidos.');
     }
     return this.issueToken(user.id, user.role, user.email);
