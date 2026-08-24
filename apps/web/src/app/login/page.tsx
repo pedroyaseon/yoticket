@@ -53,7 +53,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#0b0b0c]">
       <SiteHeader />
       <main className="mx-auto grid min-h-[calc(100vh-64px)] max-w-7xl lg:grid-cols-[.9fr_1.1fr]">
-        <section className="hidden border-r border-[#29292d] bg-[#141416] p-12 lg:flex lg:flex-col lg:justify-between">
+        <section className="hidden border-r border-[#29292d] bg-[#141416] p-12 lg:flex lg:flex-col lg:justify-center">
           <div>
             <p className="font-mono text-xs tracking-[.2em] text-[#ff5c35]">
               ACESSO YOTICKET
@@ -64,14 +64,6 @@ export default function LoginPage() {
             <p className="mt-6 max-w-lg text-lg leading-8 text-[#9e9990]">
               Clientes compram ingressos, organizadores montam a programação e a
               portaria valida o acesso.
-            </p>
-          </div>
-          <div className="border-l-2 border-[#ff5c35] pl-5">
-            <p className="text-sm leading-6 text-[#aaa59c]">
-              Ambiente de demonstração
-            </p>
-            <p className="mt-1 font-mono text-xs text-[#77736d]">
-              Senha padrão: demo123
             </p>
           </div>
         </section>

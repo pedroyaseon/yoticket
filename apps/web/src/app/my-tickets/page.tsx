@@ -14,6 +14,7 @@ type Ticket = {
   status: "VALID" | "USED" | "CANCELLED";
   ticketType: "FULL" | "HALF";
   priceInCents: number;
+  refundedAt?: string | null;
   seat?: { label: string } | null;
   event: PublicEvent;
 };
@@ -149,7 +150,14 @@ export default function MyTicketsPage() {
                     </p>
                     <p>{ticket.event.location}</p>
                     {ticket.seat && <p>Poltrona {ticket.seat.label}</p>}
-                    <p>{ticket.ticketType === "HALF" ? "Meia-entrada" : "Inteira"}</p>
+                    <p>
+                      {ticket.ticketType === "HALF"
+                        ? "Meia-entrada"
+                        : "Inteira"}
+                    </p>
+                    {ticket.status === "CANCELLED" && ticket.refundedAt && (
+                      <p>Reembolso simulado concluído</p>
+                    )}
                   </div>
                 </div>
                 <div className="relative grid place-items-center border-t border-dashed border-[#45454a] p-6 sm:border-l sm:border-t-0">
