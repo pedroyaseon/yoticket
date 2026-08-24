@@ -5,6 +5,5 @@
     "incremental": false,
     "noEmit": true
   },
-  "include": ["api.ts", "../../apps/api/src/**/*.ts"],
-  "exclude": ["../../apps/api/src/**/*.spec.ts"]
+  "include": ["api.ts"]
 }

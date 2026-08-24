@@ -1,6 +1,6 @@
 import type { Handler, HandlerResponse } from "@netlify/functions";
 import serverless from "serverless-http";
-import { createApiApplication } from "../../apps/api/src/bootstrap";
+import { createApiApplication } from "../../apps/api/dist/src/bootstrap.js";
 
 type ServerlessHandler = ReturnType<typeof serverless>;
 
