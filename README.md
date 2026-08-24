@@ -89,20 +89,204 @@ sessões iniciadas não podem ser reembolsados.
 ## Arquitetura
 
 ```text
-Next.js → REST API NestJS → PostgreSQL
-                    ↓
-                   TMDb
+┌──────────────────────────────────────────────────────────────┐
+│                         Navegador                            │
+│ catálogo público · cliente · organizador · portaria          │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ HTTPS / JSON
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    Next.js + TypeScript                      │
+│ páginas · componentes · estado da interface · sessão JWT     │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ REST /api
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                     NestJS + TypeScript                      │
+│ auth · catalog · events · reservations · payments            │
+│ tickets · gate                                               │
+└───────────────┬───────────────────────────────┬──────────────┘
+                │ Prisma / transações           │ catálogo
+                ▼                               ▼
+┌───────────────────────────────┐   ┌──────────────────────────┐
+│          PostgreSQL           │   │           TMDb           │
+│ usuários · sessões · lugares  │   │ filmes e metadados       │
+│ reservas · pagamentos         │   │ acesso somente pela API  │
+│ ingressos                     │   └──────────────────────────┘
+└───────────────────────────────┘
 ```
 
-- **Next.js:** interface pública e áreas específicas de cada perfil;
-- **NestJS:** autenticação, autorização e regras dos domínios de catálogo,
-  eventos, reservas, pagamentos, ingressos e portaria;
-- **PostgreSQL com Prisma:** persistência, transações e constraints de
-  consistência;
-- **TMDb:** catálogo externo consultado exclusivamente pelo backend.
+- **Camada web:** o Next.js renderiza o catálogo público e as áreas específicas
+  de cada perfil. A interface mantém somente estado de apresentação; preço,
+  disponibilidade e autorização são sempre confirmados pela API.
+- **Camada de aplicação:** o NestJS expõe a API REST e concentra autenticação,
+  autorização e regras de negócio. Controllers recebem os requests, DTOs validam
+  os payloads e services executam os casos de uso.
+- **Camada de dados:** o Prisma representa o domínio e executa transações no
+  PostgreSQL. Constraints únicas protegem e-mail, pagamento por reserva, código
+  de ingresso e ocupação de poltronas.
+- **Integração externa:** o módulo `catalog` consulta a TMDb e devolve apenas os
+  campos necessários para criar uma sessão. A credencial nunca passa pelo
+  navegador.
 
 A API é organizada por domínio, mantendo regras de negócio separadas da camada
 HTTP. O frontend consome somente a API interna e não recebe credenciais da TMDb.
+
+### Fluxo de compra
+
+```text
+consulta da sessão
+  → consulta das poltronas
+  → reserva temporária
+  → pagamento simulado
+  → confirmação transacional
+  → emissão de um ingresso por poltrona
+  → exibição do QR Code
+```
+
+### Fluxo de validação
+
+```text
+portaria seleciona a sessão
+  → lê o código do QR ou recebe digitação manual
+  → API localiza o ingresso e confere a sessão
+  → atualização atômica de VALID para USED
+  → retorno VALID, INVALID, ALREADY_USED ou WRONG_EVENT
+```
+
+## Requests da API
+
+Todas as rotas usam o prefixo `/api`. Endpoints protegidos recebem o token no
+header `Authorization: Bearer <token>`. O papel indicado é validado no backend.
+
+### Sistema e autenticação
+
+| Método | Rota | Acesso | Finalidade |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | Público | Verifica a disponibilidade da API. |
+| `POST` | `/api/auth/register` | Público | Cria uma conta com papel `CUSTOMER`. |
+| `POST` | `/api/auth/login` | Público | Autentica e devolve o token JWT e o usuário. |
+| `GET` | `/api/auth/me` | Autenticado | Retorna o perfil associado ao token. |
+
+```http
+POST /api/auth/register HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "cliente@email.com",
+  "password": "senha-segura"
+}
+```
+
+O login recebe o mesmo formato de payload em `POST /api/auth/login`.
+
+### Catálogo público
+
+| Método | Rota | Acesso | Finalidade |
+| --- | --- | --- | --- |
+| `GET` | `/api/movies?q={titulo}` | Público | Lista filmes que possuem sessões publicadas. |
+| `GET` | `/api/movies/:key` | Público | Exibe um filme e sua programação. |
+| `GET` | `/api/venues` | Público | Lista os locais disponíveis. |
+| `GET` | `/api/venues/:slug` | Público | Exibe um local e os filmes em cartaz. |
+| `GET` | `/api/events?q={titulo}` | Público | Lista e pesquisa sessões publicadas. |
+| `GET` | `/api/events/:id` | Público | Retorna os detalhes de uma sessão. |
+| `GET` | `/api/events/:eventId/seats` | Público | Retorna o mapa e o estado atual das poltronas. |
+| `GET` | `/api/tickets/shared/:code` | Público | Exibe os dados mínimos de um ingresso compartilhado. |
+
+### Organizador
+
+| Método | Rota | Acesso | Finalidade |
+| --- | --- | --- | --- |
+| `GET` | `/api/catalog/movies?query={titulo}` | `ORGANIZER` | Pesquisa filmes diretamente na TMDb. |
+| `GET` | `/api/organizer/events` | `ORGANIZER` | Lista as sessões do organizador. |
+| `GET` | `/api/organizer/events/:id` | `ORGANIZER` | Exibe uma sessão pertencente ao organizador. |
+| `POST` | `/api/events` | `ORGANIZER` | Cria uma sessão em rascunho. |
+| `POST` | `/api/events/schedule` | `ORGANIZER` | Cria várias sessões para o mesmo filme. |
+| `PATCH` | `/api/events/:id` | `ORGANIZER` | Atualiza descrição, local, data, capacidade ou preço. |
+| `POST` | `/api/events/:id/publish` | `ORGANIZER` | Publica uma sessão em rascunho. |
+| `DELETE` | `/api/events/:id` | `ORGANIZER` | Cancela a sessão sem removê-la do histórico. |
+
+Exemplo de criação de uma programação com duas sessões:
+
+```http
+POST /api/events/schedule HTTP/1.1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "externalId": 603,
+  "title": "Matrix",
+  "description": "Um clássico da ficção científica em nova exibição.",
+  "location": "Cine Aurora — Centro",
+  "startsAt": [
+    "2026-09-04T18:00:00-03:00",
+    "2026-09-04T21:00:00-03:00"
+  ],
+  "capacity": 96,
+  "priceInCents": 4000
+}
+```
+
+### Cliente, pagamento e ingressos
+
+| Método | Rota | Acesso | Finalidade |
+| --- | --- | --- | --- |
+| `POST` | `/api/events/:eventId/reservations` | `CUSTOMER` | Reserva de uma a dez poltronas por 15 minutos. |
+| `POST` | `/api/reservations/:id/payment` | `CUSTOMER` | Simula aprovação ou recusa do pagamento. |
+| `GET` | `/api/tickets/me` | `CUSTOMER` | Lista os ingressos do cliente. |
+| `GET` | `/api/tickets/:id` | `CUSTOMER` | Exibe um ingresso pertencente ao cliente. |
+| `POST` | `/api/tickets/:id/cancel` | `CUSTOMER` | Cancela o ingresso e registra o reembolso simulado. |
+
+Reserva com uma entrada inteira e uma meia-entrada:
+
+```http
+POST /api/events/:eventId/reservations HTTP/1.1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "seats": [
+    { "seatId": "seat-id-a1", "ticketType": "FULL" },
+    { "seatId": "seat-id-a2", "ticketType": "HALF" }
+  ]
+}
+```
+
+Pagamento simulado:
+
+```http
+POST /api/reservations/:id/payment HTTP/1.1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "outcome": "APPROVED"
+}
+```
+
+O campo `outcome` aceita `APPROVED` ou `DECLINED`. Repetir a aprovação da mesma
+reserva devolve o resultado já existente sem emitir ingressos duplicados.
+
+### Portaria
+
+| Método | Rota | Acesso | Finalidade |
+| --- | --- | --- | --- |
+| `GET` | `/api/gate/events` | `GATE` | Lista sessões disponíveis para validação. |
+| `POST` | `/api/gate/validate` | `GATE` | Valida e consome atomicamente um ingresso. |
+
+```http
+POST /api/gate/validate HTTP/1.1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "eventId": "event-id",
+  "ticketCode": "codigo-seguro-do-ingresso"
+}
+```
+
+A validação retorna um dos estados `VALID`, `INVALID`, `ALREADY_USED` ou
+`WRONG_EVENT`.
 
 ## Segurança e consistência
 
