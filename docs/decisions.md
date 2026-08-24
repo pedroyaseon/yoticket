@@ -42,9 +42,9 @@ o visitante inicia a compra, o frontend o direciona ao login e retorna ao evento
 
 ### Trade-off
 
-A seleção feita antes do login não é persistida entre páginas; o cliente escolhe
-novamente ao retornar. Isso evita armazenar intenção de compra no navegador e
-mantém a implementação proporcional ao desafio.
+A intenção de compra é persistida localmente para permitir o retorno após o
+login, mas sempre é revalidada pela API. Isso melhora a continuidade sem tornar o
+navegador autoridade sobre estoque.
 
 ## ADR-003 — Preço da meia-entrada no backend
 
@@ -98,3 +98,47 @@ a API ainda informa como disponíveis; reservas vencidas são descartadas.
 
 Os dados locais melhoram continuidade, mas não representam autoridade sobre o
 estoque. Toda reserva continua sendo revalidada transacionalmente pelo backend.
+
+## ADR-006 — Cancelamento e reembolso por ingresso
+
+### Problema
+
+Uma compra pode conter várias poltronas. Reembolsar apenas a reserva inteira
+impediria o cliente de cancelar um único ingresso e poderia liberar estoque de
+forma incorreta.
+
+### Decisão
+
+O cancelamento é feito por ingresso válido e antes do início da sessão. Uma
+transação marca o ticket como `CANCELLED`, registra `refundedAt`, remove o vínculo
+da poltrona, decrementa o estoque vendido e ajusta a reserva. Repetir a requisição
+retorna o estado já reembolsado sem decrementar o estoque novamente.
+
+### Alternativas consideradas
+
+- reembolsar sempre a reserva completa;
+- criar uma integração com provedor de pagamento;
+- manter a poltrona ocupada após o cancelamento.
+
+### Trade-off
+
+O reembolso é apenas simulado e não possui conciliação financeira. O modelo por
+ticket, entretanto, preserva consistência e permite revender a poltrona liberada.
+
+## ADR-007 — Remoção lógica de evento
+
+### Problema
+
+Apagar uma sessão pode eliminar histórico ou invalidar ingressos já pagos sem um
+processo explícito de reembolso.
+
+### Decisão
+
+O endpoint de remoção altera o evento para `CANCELLED` e libera reservas
+pendentes. Se houver ingressos vendidos, a operação é bloqueada. Dessa forma, o
+organizador não cancela vendas acidentalmente e o histórico permanece auditável.
+
+### Trade-off
+
+Eventos cancelados continuam armazenados e visíveis no painel do organizador.
+Um fluxo futuro poderá coordenar cancelamento em massa e reembolsos.

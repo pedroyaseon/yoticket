@@ -12,9 +12,9 @@ export function SiteHeader() {
     { href: "/events", label: "Filmes", visible: true },
     { href: "/venues", label: "Locais", visible: true },
     {
-      href: "/my-events",
+      href: "/organizer/events",
       label: "Meus eventos",
-      visible: user?.role === "CUSTOMER",
+      visible: user?.role === "ORGANIZER",
     },
     {
       href: "/my-tickets",
@@ -22,8 +22,8 @@ export function SiteHeader() {
       visible: !user || user.role === "CUSTOMER",
     },
     {
-      href: "/organizer/events",
-      label: "Painel",
+      href: "/organizer/events/new",
+      label: "Adicionar sessão",
       visible: user?.role === "ORGANIZER",
     },
     { href: "/gate", label: "Portaria", visible: user?.role === "GATE" },
@@ -54,15 +54,17 @@ export function SiteHeader() {
           aria-label="Navegação principal"
           className="flex items-center gap-4 text-sm sm:gap-7"
         >
-          {links.filter((link) => link.visible).map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`${link.href === "/my-tickets" ? "hidden lg:block" : ""} ${pathname.startsWith(link.href) ? "text-[#ff5c35]" : "text-[#b9b4aa] hover:text-white"}`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links
+            .filter((link) => link.visible)
+            .map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`${link.href === "/my-tickets" ? "hidden lg:block" : ""} ${pathname.startsWith(link.href) ? "text-[#ff5c35]" : "text-[#b9b4aa] hover:text-white"}`}
+              >
+                {link.label}
+              </Link>
+            ))}
         </nav>
         {loading ? (
           <div className="h-10 w-24 animate-pulse bg-[#1b1b1e]" />
@@ -93,16 +95,26 @@ export function SiteHeader() {
               {user.role === "CUSTOMER" && (
                 <>
                   <Link
-                    href="/my-events"
-                    className="block py-2 text-sm hover:text-[#ff5c35]"
-                  >
-                    Meus eventos
-                  </Link>
-                  <Link
                     href="/my-tickets"
                     className="block py-2 text-sm hover:text-[#ff5c35]"
                   >
                     Minha carteira de ingressos
+                  </Link>
+                </>
+              )}
+              {user.role === "ORGANIZER" && (
+                <>
+                  <Link
+                    href="/organizer/events"
+                    className="block py-2 text-sm hover:text-[#ff5c35]"
+                  >
+                    Gerenciar meus eventos
+                  </Link>
+                  <Link
+                    href="/organizer/events/new"
+                    className="block py-2 text-sm hover:text-[#ff5c35]"
+                  >
+                    Adicionar nova sessão
                   </Link>
                 </>
               )}

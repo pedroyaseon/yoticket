@@ -14,6 +14,7 @@ type Ticket = {
   status: "VALID" | "USED" | "CANCELLED";
   ticketType: "FULL" | "HALF";
   priceInCents: number;
+  refundedAt?: string | null;
   seat?: { label: string } | null;
   event: PublicEvent;
 };
@@ -27,6 +28,10 @@ export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error" | null>(
+    null,
+  );
+  const [cancelling, setCancelling] = useState(false);
   useEffect(() => {
     api<Ticket>(`/tickets/${id}`)
       .then(setTicket)
@@ -48,9 +53,50 @@ export default function TicketDetailPage() {
   async function copy() {
     try {
       await navigator.clipboard.writeText(shareUrl);
+      setMessageType("success");
       setMessage("Link copiado. Agora você pode compartilhar este ingresso.");
     } catch {
+      setMessageType("error");
       setMessage("Não foi possível copiar o link.");
+    }
+  }
+
+  async function cancelAndRefund() {
+    if (!ticket) return;
+    if (
+      !window.confirm(
+        "Cancelar este ingresso e solicitar o reembolso simulado? A poltrona será liberada.",
+      )
+    )
+      return;
+    setCancelling(true);
+    setMessage("");
+    setMessageType(null);
+    try {
+      const result = await api<{
+        status: "CANCELLED";
+        refundStatus: "APPROVED" | "ALREADY_REFUNDED";
+        refundedAt: string;
+        refundInCents: number;
+      }>(`/tickets/${ticket.id}/cancel`, { method: "POST" });
+      setTicket({
+        ...ticket,
+        status: "CANCELLED",
+        refundedAt: result.refundedAt,
+      });
+      setMessageType("success");
+      setMessage(
+        `Ingresso cancelado. Reembolso simulado de R$ ${(result.refundInCents / 100).toFixed(2)} aprovado.`,
+      );
+    } catch (reason) {
+      setMessageType("error");
+      setMessage(
+        reason instanceof Error
+          ? reason.message
+          : "Não foi possível cancelar o ingresso.",
+      );
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -160,10 +206,33 @@ export default function TicketDetailPage() {
             </aside>
           </div>
         </div>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <p aria-live="polite" className="text-sm text-[#9e9990]">
+        {message && (
+          <p
+            aria-live="polite"
+            role={messageType === "error" ? "alert" : "status"}
+            className={`mt-6 border p-4 text-sm ${
+              messageType === "error"
+                ? "border-red-400/30 bg-red-950/20 text-red-200"
+                : "border-emerald-400/30 bg-emerald-950/30 text-emerald-200"
+            }`}
+          >
             {message}
           </p>
+        )}
+        <div className="mt-6 flex flex-wrap items-center justify-end gap-4">
+          {ticket.status === "VALID" &&
+            new Date(ticket.event.startsAt) > new Date() && (
+              <button
+                type="button"
+                disabled={cancelling}
+                onClick={() => void cancelAndRefund()}
+                className="border border-red-500/50 px-5 py-3 text-sm font-semibold text-red-300 hover:bg-red-950/30 disabled:opacity-50"
+              >
+                {cancelling
+                  ? "Solicitando reembolso…"
+                  : "Cancelar e pedir reembolso"}
+              </button>
+            )}
           <button
             type="button"
             onClick={() => void copy()}

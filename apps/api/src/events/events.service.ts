@@ -1,11 +1,13 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Event, EventStatus } from '@prisma/client';
+import { Event, EventStatus, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
 import { buildSeatMap } from './seat-map';
 
 @Injectable()
@@ -25,6 +27,72 @@ export class EventsService {
     return this.prisma.event.findMany({
       where: { organizerId },
       orderBy: { startsAt: 'asc' },
+    });
+  }
+  async findMine(id: string, organizerId: string) {
+    const event = await this.prisma.event.findUnique({ where: { id } });
+    this.assertOwner(event, organizerId);
+    return event;
+  }
+
+  async update(id: string, organizerId: string, input: UpdateEventDto) {
+    const event = await this.prisma.event.findUnique({ where: { id } });
+    this.assertOwner(event, organizerId);
+    if (event.status === EventStatus.CANCELLED)
+      throw new ConflictException('Um evento cancelado não pode ser editado.');
+
+    const data = {
+      ...input,
+      ...(input.startsAt ? { startsAt: new Date(input.startsAt) } : {}),
+    };
+    if (input.capacity === undefined || input.capacity === event.capacity)
+      return this.prisma.event.update({ where: { id }, data });
+
+    if (event.heldQuantity > 0 || event.soldQuantity > 0)
+      throw new ConflictException(
+        'A capacidade não pode mudar depois que existem reservas ou ingressos vendidos.',
+      );
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.seat.deleteMany({ where: { eventId: id } });
+      return tx.event.update({
+        where: { id },
+        data: {
+          ...data,
+          seats: { create: buildSeatMap(input.capacity!) },
+        },
+      });
+    });
+  }
+
+  async cancel(id: string, organizerId: string) {
+    const event = await this.prisma.event.findUnique({ where: { id } });
+    this.assertOwner(event, organizerId);
+    if (event.status === EventStatus.CANCELLED) return event;
+    if (event.soldQuantity > 0)
+      throw new ConflictException(
+        'Este evento possui ingressos vendidos e não pode ser removido sem tratar os reembolsos.',
+      );
+
+    return this.prisma.$transaction(async (tx) => {
+      const pending = await tx.reservation.findMany({
+        where: { eventId: id, status: ReservationStatus.PENDING },
+        select: { id: true },
+      });
+      const reservationIds = pending.map((reservation) => reservation.id);
+      if (reservationIds.length) {
+        await tx.reservationItem.deleteMany({
+          where: { reservationId: { in: reservationIds } },
+        });
+        await tx.reservation.updateMany({
+          where: { id: { in: reservationIds } },
+          data: { status: ReservationStatus.CANCELLED },
+        });
+      }
+      return tx.event.update({
+        where: { id },
+        data: { status: EventStatus.CANCELLED, heldQuantity: 0 },
+      });
     });
   }
   listPublished(query?: string) {
@@ -117,10 +185,23 @@ export class EventsService {
     if (!event) throw new NotFoundException('Evento não encontrado.');
     if (event.organizerId !== organizerId)
       throw new ForbiddenException('Você não pode alterar este evento.');
+    if (event.status === EventStatus.CANCELLED)
+      throw new ConflictException(
+        'Um evento cancelado não pode ser publicado.',
+      );
     return this.prisma.event.update({
       where: { id },
       data: { status: EventStatus.PUBLISHED },
     });
+  }
+
+  private assertOwner(
+    event: Event | null,
+    organizerId: string,
+  ): asserts event is Event {
+    if (!event) throw new NotFoundException('Evento não encontrado.');
+    if (event.organizerId !== organizerId)
+      throw new ForbiddenException('Você não pode alterar este evento.');
   }
 
   private publishedSessions(query?: string) {

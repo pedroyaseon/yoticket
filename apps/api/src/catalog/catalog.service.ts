@@ -22,7 +22,7 @@ export class CatalogService {
 
   async searchMovies(query: string) {
     const normalized = query.trim();
-    if (normalized.length < 2)
+    if (normalized.length === 1)
       throw new BadRequestException(
         'Informe ao menos dois caracteres para buscar um filme.',
       );
@@ -32,16 +32,16 @@ export class CatalogService {
         'Catálogo de filmes não configurado.',
       );
     try {
-      const response = await fetch(
-        `https://api.themoviedb.org/3/search/movie?language=pt-BR&query=${encodeURIComponent(normalized)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            accept: 'application/json',
-          },
-          signal: AbortSignal.timeout(8000),
+      const endpoint = normalized
+        ? `/search/movie?language=pt-BR&query=${encodeURIComponent(normalized)}`
+        : '/movie/now_playing?language=pt-BR&region=BR&page=1';
+      const response = await fetch(`https://api.themoviedb.org/3${endpoint}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          accept: 'application/json',
         },
-      );
+        signal: AbortSignal.timeout(8000),
+      });
       if (!response.ok) throw new Error(`TMDb ${response.status}`);
       const payload = (await response.json()) as TmdbResponse;
       return payload.results.slice(0, 12).map((movie) => ({

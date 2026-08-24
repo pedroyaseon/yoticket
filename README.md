@@ -49,6 +49,19 @@ recusado devolve os lugares ao mapa.
 filme → local → dia → horário → poltronas → inteira/meia → pagamento → ingresso
 ```
 
+Depois da compra, um ingresso válido pode ser cancelado antes da sessão. A API
+simula o reembolso, marca o ingresso como cancelado e libera a poltrona na mesma
+transação.
+
+O organizador possui uma área própria para explorar o catálogo, adicionar
+sessões, editar data, local, capacidade e preço, abrir a página pública do filme
+e remover sessões sem vendas. Eventos com ingressos vendidos não são removidos
+silenciosamente.
+
+A portaria escolhe local, filme e horário antes de ler o QR Code. O retorno
+`VALID` recebe sinalização verde destacada; os demais resultados continuam
+diferenciando ingresso inválido, já utilizado e sessão errada.
+
 O cabeçalho informa qual conta está conectada e oferece acesso ao painel do
 perfil e logout.
 
@@ -77,6 +90,7 @@ gravado no ingresso, sem confiar no total enviado pelo navegador.
 
 O MVP entrega autenticação JWT, RBAC, catálogo TMDb, eventos, poltronas marcadas,
 inteira/meia, reserva temporária, pagamento simulado idempotente, ingresso com QR
-Code, compartilhamento público limitado e validação atômica na portaria.
+Code, cancelamento com reembolso simulado, compartilhamento público limitado e
+validação atômica na portaria.
 
 As decisões desta evolução estão registradas em `docs/decisions.md`.
