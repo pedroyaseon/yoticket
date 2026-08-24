@@ -61,3 +61,40 @@ do preço base do evento, soma a reserva e grava categoria e preço no ingresso.
 
 O MVP não valida documentação comprobatória de meia-entrada. Essa verificação é
 uma evolução separada do controle de preço e estoque.
+
+## ADR-004 — Filme público como agrupamento de sessões
+
+### Problema
+
+Exibir cada sessão como um cartaz repetia filmes e misturava informações do
+catálogo com dia, horário, local e estoque.
+
+### Decisão
+
+`Event` continua representando a sessão interna. A API agrupa eventos publicados
+pelo `externalId` da TMDb e expõe filmes, locais e horários em endpoints públicos.
+O cartaz leva à página do filme, onde o cliente escolhe local, dia e horário antes
+de abrir o mapa de poltronas.
+
+### Trade-off
+
+A solução evita uma migração para uma entidade `Movie`, mas exige manter os dados
+importados consistentes entre as sessões do mesmo filme.
+
+## ADR-005 — Persistência local da intenção de compra
+
+### Problema
+
+Recarregar a página ou passar pelo login apagava a sessão e as poltronas que o
+cliente havia acabado de escolher.
+
+### Decisão
+
+Sessão, categorias selecionadas e reserva pendente são guardadas no armazenamento
+local com chaves por sessão. Ao restaurar, o frontend mantém somente poltronas que
+a API ainda informa como disponíveis; reservas vencidas são descartadas.
+
+### Trade-off
+
+Os dados locais melhoram continuidade, mas não representam autoridade sobre o
+estoque. Toda reserva continua sendo revalidada transacionalmente pelo backend.

@@ -15,7 +15,7 @@ O projeto usa npm workspaces. O PostgreSQL é o único serviço em container; we
 ## Execução local
 
 ```bash
-cp .env.example .env
+# crie o arquivo .env na raiz com as variáveis documentadas abaixo
 docker compose up -d
 npm ci
 npm run prisma:migrate -- --name init
@@ -23,6 +23,10 @@ npm run seed
 npm run dev:api
 npm run dev:web
 ```
+
+O repositório não inclui `.env.example`. Para executar localmente, crie `.env`
+na raiz com `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`,
+`TMDB_API_READ_ACCESS_TOKEN`, `NEXT_PUBLIC_API_URL` e `WEB_URL`.
 
 ## Contas de demonstração
 
@@ -35,17 +39,22 @@ Senha para todas: `demo123`.
 
 ## Fluxo principal
 
-O catálogo e os detalhes dos eventos são públicos. Ao reservar, o cliente entra
-na conta, seleciona poltronas e escolhe inteira ou meia-entrada. As poltronas
-ficam pendentes por 15 minutos; o pagamento aprovado gera ingressos com QR Code
-e o recusado devolve os lugares ao mapa.
+O catálogo, os locais e os detalhes dos filmes são públicos. Cada filme agrupa
+suas sessões por local, dia e horário. Ao reservar, o cliente entra na conta,
+seleciona poltronas e escolhe inteira ou meia-entrada. As poltronas ficam
+pendentes por 15 minutos; o pagamento aprovado gera ingressos com QR Code e o
+recusado devolve os lugares ao mapa.
 
 ```text
-evento → poltronas → inteira/meia → reserva pendente → pagamento → ingresso
+filme → local → dia → horário → poltronas → inteira/meia → pagamento → ingresso
 ```
 
 O cabeçalho informa qual conta está conectada e oferece acesso ao painel do
 perfil e logout.
+
+O seed cria 12 filmes distintos em três locais, com três sessões por filme em
+cada local. A escolha de sessão e poltronas é preservada após recarregar a página
+ou passar pelo login, mas continua sujeita à revalidação do backend.
 
 ## Consistência das poltronas
 
