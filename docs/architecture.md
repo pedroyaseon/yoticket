@@ -6,14 +6,20 @@ Next.js → NestJS REST API → PostgreSQL
                    TMDb
 ```
 
-O frontend consulta catálogo, eventos e mapas de poltronas sem autenticação. JWT
-é incluído nas ações privadas. A API aplica RBAC para `ORGANIZER`, `CUSTOMER` e
-`GATE`; esconder elementos na interface não é considerado autorização.
+O frontend consulta filmes, locais, sessões e mapas de poltronas sem autenticação.
+JWT é incluído nas ações privadas. A API aplica RBAC para `ORGANIZER`, `CUSTOMER`
+e `GATE`; esconder elementos na interface não é considerado autorização.
+
+`Event` representa uma sessão interna. A camada pública agrupa eventos pelo
+`externalId` da TMDb para montar um único cartaz por filme. O mesmo conjunto é
+agrupado por `location` para formar a navegação de locais.
 
 ## Compra
 
 ```text
-mapa público
+filme e locais públicos
+  → escolha de local, dia e horário
+  → mapa de poltronas da sessão
   → seleção local de poltronas e categoria
   → autenticação do cliente
   → transação cria reserva e bloqueia poltronas

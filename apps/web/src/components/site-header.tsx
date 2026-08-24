@@ -9,7 +9,13 @@ export function SiteHeader() {
   const router = useRouter();
   const { user, loading, signOut } = useAuth();
   const links = [
-    { href: "/events", label: "Eventos", visible: true },
+    { href: "/events", label: "Filmes", visible: true },
+    { href: "/venues", label: "Locais", visible: true },
+    {
+      href: "/my-events",
+      label: "Meus eventos",
+      visible: user?.role === "CUSTOMER",
+    },
     {
       href: "/my-tickets",
       label: "Meus ingressos",
@@ -52,7 +58,7 @@ export function SiteHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className={`${link.href === "/my-tickets" ? "hidden sm:block" : ""} ${pathname.startsWith(link.href) ? "text-[#ff5c35]" : "text-[#b9b4aa] hover:text-white"}`}
+              className={`${link.href === "/my-tickets" ? "hidden lg:block" : ""} ${pathname.startsWith(link.href) ? "text-[#ff5c35]" : "text-[#b9b4aa] hover:text-white"}`}
             >
               {link.label}
             </Link>
@@ -85,12 +91,20 @@ export function SiteHeader() {
               <p className="mt-1 text-xs text-[#8f8a82]">Perfil: {roleLabel}</p>
               <div className="my-4 border-t border-[#29292d]" />
               {user.role === "CUSTOMER" && (
-                <Link
-                  href="/my-tickets"
-                  className="block py-2 text-sm hover:text-[#ff5c35]"
-                >
-                  Minha carteira de ingressos
-                </Link>
+                <>
+                  <Link
+                    href="/my-events"
+                    className="block py-2 text-sm hover:text-[#ff5c35]"
+                  >
+                    Meus eventos
+                  </Link>
+                  <Link
+                    href="/my-tickets"
+                    className="block py-2 text-sm hover:text-[#ff5c35]"
+                  >
+                    Minha carteira de ingressos
+                  </Link>
+                </>
               )}
               <button
                 type="button"

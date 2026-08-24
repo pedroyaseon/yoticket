@@ -1,26 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { EventCard } from "@/components/event-card";
+import { MovieCard } from "@/components/movie-card";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { api } from "@/lib/api";
-import type { PublicEvent } from "@/lib/event";
+import type { MovieSummary } from "@/lib/movie";
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<PublicEvent[]>([]);
+  const [movies, setMovies] = useState<MovieSummary[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
-    api<PublicEvent[]>(
-      `/events${query ? `?q=${encodeURIComponent(query)}` : ""}`,
+    api<MovieSummary[]>(
+      `/movies${query ? `?q=${encodeURIComponent(query)}` : ""}`,
       { signal: controller.signal },
     )
       .then((items) => {
-        setEvents(items);
+        setMovies(items);
         setError("");
       })
       .catch((reason: unknown) => {
@@ -28,7 +28,7 @@ export default function EventsPage() {
           setError(
             reason instanceof Error
               ? reason.message
-              : "Não foi possível carregar os eventos.",
+              : "Não foi possível carregar os filmes.",
           );
       })
       .finally(() => setLoading(false));
@@ -48,11 +48,11 @@ export default function EventsPage() {
               PROGRAMAÇÃO
             </p>
             <h1 className="mt-4 text-5xl font-semibold tracking-tight sm:text-6xl">
-              Eventos em cartaz
+              Filmes em cartaz
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-[#a8a39a]">
-              Sessões especiais selecionadas para você. Escolha um evento e
-              garanta seu lugar.
+              Escolha o filme primeiro. Na página seguinte você define o local,
+              o dia, o horário e a poltrona.
             </p>
           </div>
           <label htmlFor="event-search">
@@ -97,30 +97,30 @@ export default function EventsPage() {
             {error}
           </p>
         )}
-        {!loading && !error && events.length === 0 && (
+        {!loading && !error && movies.length === 0 && (
           <div className="mt-10 border border-[#29292d] bg-[#141416] p-10 text-center">
-            <p className="text-xl font-semibold">Nenhum evento encontrado</p>
+            <p className="text-xl font-semibold">Nenhum filme encontrado</p>
             <p className="mt-2 text-[#9e9990]">
               Tente buscar por outro título.
             </p>
           </div>
         )}
-        {!loading && !error && events.length > 0 && (
+        {!loading && !error && movies.length > 0 && (
           <>
             <div className="mt-10 flex items-center justify-between">
               <p className="text-sm text-[#8f8a82]">
-                {events.length}{" "}
-                {events.length === 1
-                  ? "evento encontrado"
-                  : "eventos encontrados"}
+                {movies.length}{" "}
+                {movies.length === 1
+                  ? "filme encontrado"
+                  : "filmes encontrados"}
               </p>
               <p className="font-mono text-xs text-[#66635e]">
-                ORDENADOS POR DATA
+                EM CARTAZ
               </p>
             </div>
             <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {events.map((event, index) => (
-                <EventCard key={event.id} event={event} priority={index < 4} />
+              {movies.map((movie, index) => (
+                <MovieCard key={movie.key} movie={movie} priority={index < 4} />
               ))}
             </div>
           </>
