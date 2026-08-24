@@ -168,3 +168,37 @@ todo o lote em uma transação.
 As sessões concretas ocupam mais registros, mas mantêm compra, estoque e portaria
 simples. Alterar toda a temporada depois de criada continua sendo uma melhoria
 futura.
+
+## ADR-009 — Deploy serverless no Netlify com PostgreSQL Neon
+
+### Problema
+
+O MVP precisa de hospedagem gratuita para Next.js, NestJS e PostgreSQL. Um
+servidor gratuito tradicional hiberna após inatividade, enquanto executar todo o
+sistema em um único processo reduziria a separação entre as aplicações.
+
+### Decisão
+
+Next.js e a API são publicados no mesmo projeto Netlify. A configuração comum do
+NestJS foi extraída para uma factory: o entrypoint local chama `listen`, e uma
+Netlify Function inicializa o mesmo app sem abrir porta. O handler é armazenado
+em cache por instância aquecida. O PostgreSQL 16 fica no Neon, em AWS US East 2,
+usando a connection string com pooling.
+
+O build de produção aplica migrations existentes com `prisma migrate deploy`.
+Deploy Previews não aplicam migrations e o seed é uma operação inicial explícita.
+
+### Alternativas consideradas
+
+- Render para frontend e servidor NestJS tradicional;
+- Netlify somente no frontend e API em outro provedor;
+- unir Next.js e NestJS em um único servidor persistente;
+- substituir a API NestJS por route handlers do Next.js.
+
+### Trade-off
+
+A Function pode sofrer cold start e o rate limit em memória vale apenas por
+instância. Em compensação, o domínio único simplifica CORS, o plano gratuito é
+adequado à demonstração e a API preserva seus módulos, DTOs, RBAC e regras de
+negócio. Consistência de estoque, poltronas e portaria continua garantida pelo
+banco, independentemente da instância que processa a requisição.

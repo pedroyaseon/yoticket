@@ -1,14 +1,22 @@
 # Arquitetura
 
 ```text
-Next.js → NestJS REST API → PostgreSQL
-                    ↓
-                   TMDb
+Netlify CDN / Next.js
+        ↓ /api
+Netlify Function / NestJS REST API → Neon PostgreSQL
+                            ↓
+                           TMDb
 ```
 
 O frontend consulta filmes, locais, sessões e mapas de poltronas sem autenticação.
 JWT é incluído nas ações privadas. A API aplica RBAC para `ORGANIZER`, `CUSTOMER`
 e `GATE`; esconder elementos na interface não é considerado autorização.
+
+Localmente, o NestJS continua como servidor Node na porta 3001. Em produção, a
+mesma configuração da aplicação é inicializada por um handler serverless e
+reutilizada durante o ciclo de vida da Netlify Function. O frontend usa `/api`
+no mesmo domínio; a connection string pooled do Neon evita esgotamento de
+conexões quando novas instâncias serverless são criadas.
 
 `Event` representa uma sessão interna. A camada pública agrupa eventos pelo
 `externalId` da TMDb para montar um único cartaz por filme. O mesmo conjunto é

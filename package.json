@@ -8,15 +8,24 @@
     "dev:web": "npm run dev --workspace=@yoticket/web",
     "dev:api": "npm run start:dev --workspace=@yoticket/api",
     "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && npm run typecheck:netlify",
+    "typecheck:netlify": "npm run build:api && npm exec --workspace=@yoticket/api tsc -- --noEmit -p ../../netlify/functions/tsconfig.json",
     "test": "npm run test --workspace=@yoticket/api",
+    "build:api": "npm run build --workspace=@yoticket/api",
+    "build:web": "npm run build --workspace=@yoticket/web",
+    "netlify:build": "npm run prisma:generate && npm run build:api && npm run build:web",
+    "netlify:build:production": "npm run prisma:deploy && npm run netlify:build",
     "prisma:generate": "npm run prisma:generate --workspace=@yoticket/api",
+    "prisma:deploy": "npm exec --workspace=@yoticket/api prisma migrate deploy",
     "prisma:migrate": "npm run prisma:migrate --workspace=@yoticket/api",
     "seed": "npm run prisma:seed --workspace=@yoticket/api"
   },
   "dependencies": {
     "@nestjs/platform-express": "11.2.1",
+    "@netlify/functions": "^6.0.0",
+    "bcrypt": "6.0.0",
     "class-transformer": "0.5.1",
-    "class-validator": "0.15.1"
+    "class-validator": "0.15.1",
+    "serverless-http": "^4.0.0"
   }
 }

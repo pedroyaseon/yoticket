@@ -12,6 +12,10 @@ Next.js (apps/web) → NestJS (apps/api) → PostgreSQL
 
 O projeto usa npm workspaces. O PostgreSQL é o único serviço em container; web e API rodam localmente para reduzir a complexidade do desenvolvimento.
 
+Em produção, Next.js e NestJS são publicados no mesmo projeto Netlify. A API é
+empacotada como uma Netlify Function e continua disponível sob `/api`; o banco
+PostgreSQL é fornecido pelo Neon na mesma região das Functions (AWS US East 2).
+
 ## Execução local
 
 ```bash
@@ -26,7 +30,40 @@ npm run dev:web
 
 O repositório não inclui `.env.example`. Para executar localmente, crie `.env`
 na raiz com `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`,
-`TMDB_API_READ_ACCESS_TOKEN`, `NEXT_PUBLIC_API_URL` e `WEB_URL`.
+`TMDB_API_READ_ACCESS_TOKEN`, `NEXT_PUBLIC_API_URL` e `WEB_ORIGIN`.
+
+## Deploy — Netlify e Neon
+
+1. Crie no Neon um projeto `yoticket` com PostgreSQL 16 em AWS US East 2
+   (Ohio), sem Neon Auth.
+2. Copie a connection string com pooling habilitado.
+3. No Netlify, importe o repositório `yoticket`, selecione `apps/web` como
+   package directory e mantenha a base do monorepo na raiz.
+4. Cadastre no painel do Netlify as variáveis abaixo. Segredos nunca devem ser
+   adicionados ao repositório.
+
+```text
+DATABASE_URL=<conexão pooled do Neon>
+JWT_SECRET=<segredo aleatório com no mínimo 32 bytes>
+JWT_EXPIRES_IN=1h
+TMDB_API_READ_ACCESS_TOKEN=<token da TMDb>
+NEXT_PUBLIC_API_URL=/api
+WEB_ORIGIN=https://<nome-do-site>.netlify.app
+```
+
+O build de produção executa `prisma migrate deploy` antes de compilar. Deploy
+Previews apenas geram o Prisma Client e compilam a aplicação, evitando que uma
+PR aplique migrations no banco de produção. Após o primeiro deploy, execute o
+seed uma única vez a partir de um ambiente confiável com `DATABASE_URL`
+apontando para o Neon:
+
+```bash
+npm run seed
+```
+
+O handler NestJS é reutilizado enquanto a Function permanece aquecida. Regras
+críticas de concorrência continuam protegidas por transações e constraints no
+PostgreSQL, e não por memória do processo serverless.
 
 ## Contas de demonstração
 
