@@ -38,6 +38,23 @@ export default function NewEventPage() {
       .catch(() => undefined);
   }, []);
 
+  useEffect(() => {
+    if (!selected) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape" && !creating) {
+        setSelected(null);
+        setError("");
+      }
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [creating, selected]);
+
   async function loadMovies(movieQuery: string) {
     setSearching(true);
     setError("");
@@ -165,7 +182,7 @@ export default function NewEventPage() {
           )}
         </form>
 
-        {error && (
+        {error && !selected && (
           <p
             role="alert"
             className="mt-5 border border-red-400/30 bg-red-950/20 p-4 text-red-200"
@@ -238,41 +255,98 @@ export default function NewEventPage() {
         </section>
 
         {selected && (
-          <form
-            onSubmit={create}
-            className="mt-10 grid gap-7 border border-[#343439] bg-[#141416] p-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:p-8"
-            aria-busy={creating}
+          <div
+            className="fixed inset-0 z-50 overflow-y-auto bg-black/85 px-4 py-5 backdrop-blur-sm sm:px-6 sm:py-8"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget && !creating) {
+                setSelected(null);
+                setError("");
+              }
+            }}
           >
-            <div className="relative hidden aspect-[2/3] overflow-hidden bg-[#202024] lg:block">
-              {selected.posterUrl && (
-                <Image
-                  src={selected.posterUrl}
-                  alt=""
-                  fill
-                  sizes="220px"
-                  className="object-cover"
-                />
-              )}
-            </div>
-            <div>
-              <p className="font-mono text-xs tracking-[.16em] text-[#ff5c35]">
-                CONFIGURAR PROGRAMAÇÃO
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold">{selected.title}</h2>
-              <ScheduleFields venues={venues} />
-              <div className="mt-7 flex flex-wrap items-center gap-4">
-                <button
-                  disabled={creating}
-                  className="bg-[#ff5c35] px-6 py-3.5 font-semibold text-black disabled:opacity-50"
-                >
-                  {creating ? "Criando programação…" : "Criar programação"}
-                </button>
-                <p className="text-sm text-[#77736d]">
-                  Meia-entrada será calculada automaticamente.
-                </p>
+            <form
+              onSubmit={create}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="schedule-dialog-title"
+              aria-busy={creating}
+              className="relative mx-auto grid w-full max-w-6xl gap-7 border border-[#3b3b40] bg-[#141416] p-5 shadow-2xl md:grid-cols-[180px_minmax(0,1fr)] sm:p-7 lg:grid-cols-[220px_minmax(0,1fr)] lg:p-8"
+            >
+              <button
+                type="button"
+                aria-label="Fechar configuração"
+                autoFocus
+                disabled={creating}
+                onClick={() => {
+                  setSelected(null);
+                  setError("");
+                }}
+                className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center border border-[#3d3d42] bg-[#111113] text-xl text-[#aaa59c] hover:border-[#ff5c35] hover:text-white disabled:opacity-40"
+              >
+                ×
+              </button>
+
+              <div className="relative hidden aspect-[2/3] self-start overflow-hidden bg-[#202024] md:block">
+                {selected.posterUrl && (
+                  <Image
+                    src={selected.posterUrl}
+                    alt={`Cartaz de ${selected.title}`}
+                    fill
+                    sizes="220px"
+                    className="object-cover"
+                  />
+                )}
               </div>
-            </div>
-          </form>
+              <div className="min-w-0 pt-9 md:pt-0">
+                <p className="font-mono text-xs tracking-[.16em] text-[#ff5c35]">
+                  CONFIGURAR PROGRAMAÇÃO
+                </p>
+                <h2
+                  id="schedule-dialog-title"
+                  className="mt-3 pr-10 text-3xl font-semibold"
+                >
+                  {selected.title}
+                </h2>
+                <p className="mt-2 text-sm text-[#8f8a82]">
+                  Defina o local, período e horários antes de publicar as
+                  sessões.
+                </p>
+
+                {error && (
+                  <p
+                    role="alert"
+                    className="mt-5 border border-red-400/30 bg-red-950/20 p-4 text-red-200"
+                  >
+                    {error}
+                  </p>
+                )}
+
+                <ScheduleFields venues={venues} />
+                <div className="mt-7 flex flex-wrap items-center gap-4 border-t border-[#303034] pt-6">
+                  <button
+                    type="button"
+                    disabled={creating}
+                    onClick={() => {
+                      setSelected(null);
+                      setError("");
+                    }}
+                    className="border border-[#3d3d42] px-5 py-3.5 text-sm text-[#bbb6ad] hover:border-[#77736d] disabled:opacity-40"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    disabled={creating}
+                    className="bg-[#ff5c35] px-6 py-3.5 font-semibold text-black disabled:opacity-50"
+                  >
+                    {creating ? "Criando programação…" : "Criar programação"}
+                  </button>
+                  <p className="text-sm text-[#77736d]">
+                    Meia-entrada será calculada automaticamente.
+                  </p>
+                </div>
+              </div>
+            </form>
+          </div>
         )}
       </main>
       <SiteFooter />
