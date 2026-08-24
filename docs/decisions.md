@@ -142,3 +142,29 @@ organizador não cancela vendas acidentalmente e o histórico permanece auditáv
 
 Eventos cancelados continuam armazenados e visíveis no painel do organizador.
 Um fluxo futuro poderá coordenar cancelamento em massa e reembolsos.
+
+## ADR-008 — Programação recorrente como lote transacional
+
+### Problema
+
+Criar cada horário manualmente é repetitivo, e várias chamadas independentes
+podem deixar apenas parte da temporada cadastrada quando uma delas falha.
+
+### Decisão
+
+O organizador escolhe primeiro dia, duração, dias da semana e até quatro horários
+por dia. O frontend converte a grade em instantes ISO e a API valida no máximo
+120 sessões, serializa a operação pelo organizador, detecta sobreposições e cria
+todo o lote em uma transação.
+
+### Alternativas consideradas
+
+- uma requisição separada por sessão;
+- armazenar uma regra recorrente e gerar sessões sob demanda;
+- adicionar uma entidade de temporada completa.
+
+### Trade-off
+
+As sessões concretas ocupam mais registros, mas mantêm compra, estoque e portaria
+simples. Alterar toda a temporada depois de criada continua sendo uma melhoria
+futura.

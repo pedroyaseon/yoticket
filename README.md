@@ -54,9 +54,9 @@ simula o reembolso, marca o ingresso como cancelado e libera a poltrona na mesma
 transação.
 
 O organizador possui uma área própria para explorar o catálogo, adicionar
-sessões, editar data, local, capacidade e preço, abrir a página pública do filme
-e remover sessões sem vendas. Eventos com ingressos vendidos não são removidos
-silenciosamente.
+uma programação recorrente por período, dias da semana e horários, editar data,
+local, capacidade e preço, abrir a página pública do filme e remover sessões sem
+vendas. Eventos com ingressos vendidos não são removidos silenciosamente.
 
 A portaria escolhe local, filme e horário antes de ler o QR Code. O retorno
 `VALID` recebe sinalização verde destacada; os demais resultados continuam
@@ -65,7 +65,7 @@ diferenciando ingresso inválido, já utilizado e sessão errada.
 O cabeçalho informa qual conta está conectada e oferece acesso ao painel do
 perfil e logout.
 
-O seed cria 12 filmes distintos em três locais, com três sessões por filme em
+O seed cria 12 filmes distintos em quatro locais, com três sessões por filme em
 cada local. A escolha de sessão e poltronas é preservada após recarregar a página
 ou passar pelo login, mas continua sujeita à revalidação do backend.
 
