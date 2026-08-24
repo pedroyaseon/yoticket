@@ -53,7 +53,7 @@ export function EventCard({
               A partir de
             </p>
             <p className="mt-1 font-semibold text-[#ff7a59]">
-              {formatCurrency(event.priceInCents)}
+              {formatCurrency(Math.floor(event.priceInCents / 2))}
             </p>
           </div>
           <p

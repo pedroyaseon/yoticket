@@ -12,6 +12,9 @@ type Ticket = {
   id: string;
   code: string;
   status: "VALID" | "USED" | "CANCELLED";
+  ticketType: "FULL" | "HALF";
+  priceInCents: number;
+  seat?: { label: string } | null;
   event: PublicEvent;
 };
 const labels = {
@@ -107,7 +110,7 @@ export default function TicketDetailPage() {
                   <p className="mt-2 font-semibold">{ticket.event.location}</p>
                 </div>
               </div>
-              <div className="mt-7 flex flex-wrap items-center justify-between gap-4">
+              <div className="mt-7 grid gap-5 sm:grid-cols-3">
                 <div>
                   <p className="text-xs uppercase tracking-[.12em] text-black/50">
                     Status
@@ -118,6 +121,24 @@ export default function TicketDetailPage() {
                     {labels[ticket.status]}
                   </p>
                 </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[.12em] text-black/50">
+                    Lugar
+                  </p>
+                  <p className="mt-2 font-semibold">
+                    {ticket.seat ? `Poltrona ${ticket.seat.label}` : "Livre"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[.12em] text-black/50">
+                    Categoria
+                  </p>
+                  <p className="mt-2 font-semibold">
+                    {ticket.ticketType === "HALF" ? "Meia-entrada" : "Inteira"}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-7 flex justify-end">
                 <p className="font-mono text-xs text-black/50">
                   {ticket.code.slice(0, 16).toUpperCase()}
                 </p>
