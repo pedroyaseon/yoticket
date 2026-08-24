@@ -25,6 +25,7 @@ filme e locais públicos
   → transação cria reserva e bloqueia poltronas
   → pagamento aprovado confirma e gera tickets
   → pagamento recusado ou expiração libera poltronas
+  → cancelamento do ingresso libera poltrona e estoque em transação
 ```
 
 A constraint única de `ReservationItem.seatId`, combinada ao bloqueio da linha do
@@ -35,3 +36,14 @@ evento na transação, impede que duas compras ocupem a mesma poltrona.
 O QR Code contém um token aleatório. A portaria envia evento e token à API. Um
 `updateMany` condicional altera apenas tickets `VALID`; somente uma validação
 concorrente recebe `VALID`, e as seguintes recebem `ALREADY_USED`.
+
+Antes da leitura, a interface agrupa as sessões autorizadas em três níveis:
+local, filme e horário. O identificador enviado na validação continua sendo o
+`eventId` da sessão exata.
+
+## Organização
+
+O catálogo TMDb é carregado pelo backend e apresenta filmes em cartaz antes de
+qualquer busca. Eventos do organizador podem ser consultados e editados apenas
+pelo proprietário. A remoção é lógica (`CANCELLED`) para preservar histórico e
+é bloqueada quando existem ingressos vendidos.
