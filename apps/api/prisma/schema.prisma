@@ -143,6 +143,7 @@ model Ticket {
   ticketType    TicketType   @default(FULL)
   priceInCents  Int          @default(0)
   usedAt        DateTime?
+  refundedAt    DateTime?
   createdAt     DateTime     @default(now())
   event         Event        @relation(fields: [eventId], references: [id])
   reservation   Reservation  @relation(fields: [reservationId], references: [id])

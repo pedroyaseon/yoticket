@@ -12,7 +12,13 @@ export class GateService {
   async listEvents() {
     return this.prisma.event.findMany({
       where: { status: EventStatus.PUBLISHED, startsAt: { gte: new Date() } },
-      select: { id: true, title: true, location: true, startsAt: true },
+      select: {
+        id: true,
+        externalId: true,
+        title: true,
+        location: true,
+        startsAt: true,
+      },
       orderBy: { startsAt: 'asc' },
     });
   }
