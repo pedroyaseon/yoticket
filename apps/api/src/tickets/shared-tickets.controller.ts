@@ -12,6 +12,9 @@ export class SharedTicketsController {
       select: {
         code: true,
         status: true,
+        ticketType: true,
+        priceInCents: true,
+        seat: { select: { label: true } },
         event: {
           select: {
             title: true,

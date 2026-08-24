@@ -17,6 +17,7 @@ export class PaymentsService {
     return this.prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findUnique({
         where: { id: reservationId },
+        include: { items: true },
       });
       if (!reservation) throw new NotFoundException('Reserva não encontrada.');
       if (reservation.customerId !== customerId) throw new ForbiddenException();
@@ -30,6 +31,9 @@ export class PaymentsService {
         reservation.expiresAt <= new Date()
       ) {
         if (reservation.status === ReservationStatus.PENDING) {
+          await tx.reservationItem.deleteMany({
+            where: { reservationId },
+          });
           await tx.reservation.update({
             where: { id: reservationId },
             data: { status: ReservationStatus.EXPIRED },
@@ -67,13 +71,18 @@ export class PaymentsService {
       });
       if (outcome === 'APPROVED') {
         await tx.ticket.createMany({
-          data: Array.from({ length: reservation.quantity }, () => ({
+          data: reservation.items.map((item) => ({
             eventId: reservation.eventId,
             reservationId,
             ownerId: customerId,
             code: randomBytes(32).toString('base64url'),
+            seatId: item.seatId,
+            ticketType: item.ticketType,
+            priceInCents: item.priceInCents,
           })),
         });
+      } else {
+        await tx.reservationItem.deleteMany({ where: { reservationId } });
       }
       return { status, reservationId };
     });

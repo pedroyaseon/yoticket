@@ -7,6 +7,9 @@ describe('PaymentsService', () => {
     reservationId: string;
     ownerId: string;
     code: string;
+    seatId: string;
+    ticketType: 'FULL' | 'HALF';
+    priceInCents: number;
   };
   let createdTickets: CreatedTicket[] = [];
   const tx = {
@@ -15,6 +18,7 @@ describe('PaymentsService', () => {
     payment: { findUnique: jest.fn(), create: jest.fn() },
     event: { update: jest.fn() },
     ticket: { createMany: jest.fn() },
+    reservationItem: { deleteMany: jest.fn() },
   };
   const prisma = {
     $transaction: jest.fn((callback: (client: typeof tx) => unknown) =>
@@ -29,6 +33,18 @@ describe('PaymentsService', () => {
     quantity: 2,
     status: ReservationStatus.PENDING,
     expiresAt: new Date(Date.now() + 60_000),
+    items: [
+      {
+        seatId: 'seat-1',
+        ticketType: 'FULL' as const,
+        priceInCents: 4000,
+      },
+      {
+        seatId: 'seat-2',
+        ticketType: 'HALF' as const,
+        priceInCents: 2000,
+      },
+    ],
   };
 
   beforeEach(() => {
@@ -61,6 +77,7 @@ describe('PaymentsService', () => {
         expect.objectContaining({
           eventId: 'event-1',
           ownerId: 'customer-1',
+          seatId: 'seat-1',
         }),
       ]),
     );
@@ -95,5 +112,8 @@ describe('PaymentsService', () => {
       data: { heldQuantity: { decrement: 2 } },
     });
     expect(tx.ticket.createMany).not.toHaveBeenCalled();
+    expect(tx.reservationItem.deleteMany).toHaveBeenCalledWith({
+      where: { reservationId: 'reservation-1' },
+    });
   });
 });

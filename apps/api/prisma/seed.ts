@@ -1,5 +1,6 @@
 import { PrismaClient, Role, EventStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { buildSeatMap } from '../src/events/seat-map';
 
 const prisma = new PrismaClient();
 const DEMO_PASSWORD = 'demo123';
@@ -121,6 +122,16 @@ async function main() {
         organizerId: organizer.id,
       },
     });
+
+    const seatCount = await prisma.seat.count({ where: { eventId: id } });
+    if (seatCount === 0) {
+      await prisma.seat.createMany({
+        data: buildSeatMap(event.capacity).map((seat) => ({
+          ...seat,
+          eventId: id,
+        })),
+      });
+    }
   }
 }
 
