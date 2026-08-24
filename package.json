@@ -9,7 +9,7 @@
     "dev:api": "npm run start:dev --workspace=@yoticket/api",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present && npm run typecheck:netlify",
-    "typecheck:netlify": "npm exec --workspace=@yoticket/api tsc -- --noEmit -p ../../netlify/functions/tsconfig.json",
+    "typecheck:netlify": "npm run build:api && npm exec --workspace=@yoticket/api tsc -- --noEmit -p ../../netlify/functions/tsconfig.json",
     "test": "npm run test --workspace=@yoticket/api",
     "build:api": "npm run build --workspace=@yoticket/api",
     "build:web": "npm run build --workspace=@yoticket/web",
