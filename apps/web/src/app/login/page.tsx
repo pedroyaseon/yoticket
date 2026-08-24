@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { api } from "@/lib/api";
+import { useAuth, type SessionUser } from "@/lib/auth";
 
 const destinations: Record<string, string> = {
   ORGANIZER: "/organizer/events",
@@ -22,19 +23,23 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
+  const { signIn } = useAuth();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setError("");
     try {
-      const result = await api<{ accessToken: string; user: { role: string } }>(
+      const result = await api<{ accessToken: string; user: SessionUser }>(
         "/auth/login",
         { method: "POST", body: JSON.stringify({ email, password }) },
       );
-      localStorage.setItem("yoticket.token", result.accessToken);
-      localStorage.setItem("yoticket.role", result.user.role);
-      router.push(destinations[result.user.role] ?? "/events");
+      signIn(result.accessToken, result.user);
+      const requestedPath = new URLSearchParams(window.location.search).get(
+        "returnTo",
+      );
+      const safePath = requestedPath?.startsWith("/") ? requestedPath : null;
+      router.push(safePath ?? destinations[result.user.role] ?? "/events");
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "Não foi possível entrar.",

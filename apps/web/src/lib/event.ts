@@ -11,6 +11,24 @@ export type PublicEvent = {
   posterUrl?: string | null;
 };
 
+export type TicketType = "FULL" | "HALF";
+export type SeatStatus = "AVAILABLE" | "PENDING" | "RESERVED";
+
+export type EventSeat = {
+  id: string;
+  label: string;
+  row: string;
+  number: number;
+  status: SeatStatus;
+};
+
+export type SeatMap = {
+  eventId: string;
+  prices: { full: number; half: number };
+  holdMinutes: number;
+  seats: EventSeat[];
+};
+
 export function formatCurrency(valueInCents: number) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",

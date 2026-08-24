@@ -1,15 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-const links = [
-  { href: "/events", label: "Eventos" },
-  { href: "/my-tickets", label: "Meus ingressos" },
-];
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading, signOut } = useAuth();
+  const links = [
+    { href: "/events", label: "Eventos", visible: true },
+    {
+      href: "/my-tickets",
+      label: "Meus ingressos",
+      visible: !user || user.role === "CUSTOMER",
+    },
+    {
+      href: "/organizer/events",
+      label: "Painel",
+      visible: user?.role === "ORGANIZER",
+    },
+    { href: "/gate", label: "Portaria", visible: user?.role === "GATE" },
+  ];
+  const roleLabel =
+    user?.role === "CUSTOMER"
+      ? "Cliente"
+      : user?.role === "ORGANIZER"
+        ? "Organizador"
+        : "Portaria";
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#29292d] bg-[#0b0b0c]/95 backdrop-blur">
@@ -30,7 +48,7 @@ export function SiteHeader() {
           aria-label="Navegação principal"
           className="flex items-center gap-4 text-sm sm:gap-7"
         >
-          {links.map((link) => (
+          {links.filter((link) => link.visible).map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -40,12 +58,60 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <Link
-          href="/login"
-          className="border border-[#3a3a40] px-4 py-2 text-sm font-medium hover:border-[#ff5c35] hover:text-[#ff5c35]"
-        >
-          Entrar
-        </Link>
+        {loading ? (
+          <div className="h-10 w-24 animate-pulse bg-[#1b1b1e]" />
+        ) : user ? (
+          <details className="group relative">
+            <summary
+              aria-label={`Perfil conectado: ${user.email}`}
+              className="flex cursor-pointer list-none items-center gap-3 border border-[#343439] px-2.5 py-2 hover:border-[#ff5c35]"
+            >
+              <span className="relative grid h-7 w-7 place-items-center rounded-full bg-[#ff5c35] text-xs font-bold text-black">
+                {user.email.slice(0, 1).toUpperCase()}
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0b0b0c] bg-emerald-400" />
+              </span>
+              <span className="hidden max-w-36 text-left sm:block">
+                <span className="block truncate text-xs font-medium">
+                  {user.email.split("@")[0]}
+                </span>
+                <span className="block text-[10px] text-emerald-400">
+                  Conectado
+                </span>
+              </span>
+              <span className="text-xs text-[#77736d]">⌄</span>
+            </summary>
+            <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 border border-[#343439] bg-[#141416] p-4 shadow-2xl">
+              <p className="truncate text-sm font-medium">{user.email}</p>
+              <p className="mt-1 text-xs text-[#8f8a82]">Perfil: {roleLabel}</p>
+              <div className="my-4 border-t border-[#29292d]" />
+              {user.role === "CUSTOMER" && (
+                <Link
+                  href="/my-tickets"
+                  className="block py-2 text-sm hover:text-[#ff5c35]"
+                >
+                  Minha carteira de ingressos
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  signOut();
+                  router.push("/events");
+                }}
+                className="mt-2 w-full border border-[#343439] px-3 py-2 text-left text-sm text-[#aaa59c] hover:border-[#ff5c35] hover:text-white"
+              >
+                Sair da conta
+              </button>
+            </div>
+          </details>
+        ) : (
+          <Link
+            href="/login"
+            className="border border-[#3a3a40] px-4 py-2 text-sm font-medium hover:border-[#ff5c35] hover:text-[#ff5c35]"
+          >
+            Entrar
+          </Link>
+        )}
       </div>
     </header>
   );

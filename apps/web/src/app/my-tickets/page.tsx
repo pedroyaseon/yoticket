@@ -12,6 +12,9 @@ type Ticket = {
   id: string;
   code: string;
   status: "VALID" | "USED" | "CANCELLED";
+  ticketType: "FULL" | "HALF";
+  priceInCents: number;
+  seat?: { label: string } | null;
   event: PublicEvent;
 };
 
@@ -145,6 +148,8 @@ export default function MyTicketsPage() {
                       {formatTime(ticket.event.startsAt)}
                     </p>
                     <p>{ticket.event.location}</p>
+                    {ticket.seat && <p>Poltrona {ticket.seat.label}</p>}
+                    <p>{ticket.ticketType === "HALF" ? "Meia-entrada" : "Inteira"}</p>
                   </div>
                 </div>
                 <div className="relative grid place-items-center border-t border-dashed border-[#45454a] p-6 sm:border-l sm:border-t-0">

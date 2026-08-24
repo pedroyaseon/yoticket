@@ -37,6 +37,11 @@ enum TicketStatus {
   CANCELLED
 }
 
+enum TicketType {
+  FULL
+  HALF
+}
+
 model User {
   id           String        @id @default(cuid())
   email        String        @unique
@@ -50,45 +55,73 @@ model User {
 }
 
 model Event {
-  id             String        @id @default(cuid())
-  externalId     Int?
-  title          String
-  posterUrl      String?
-  description    String
-  location       String
-  startsAt       DateTime
-  capacity       Int
-  heldQuantity   Int           @default(0)
-  soldQuantity   Int           @default(0)
-  priceInCents   Int
-  status         EventStatus   @default(DRAFT)
-  organizerId    String
-  organizer      User          @relation("EventOrganizer", fields: [organizerId], references: [id])
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  reservations   Reservation[]
-  tickets        Ticket[]
+  id           String        @id @default(cuid())
+  externalId   Int?
+  title        String
+  posterUrl    String?
+  description  String
+  location     String
+  startsAt     DateTime
+  capacity     Int
+  heldQuantity Int           @default(0)
+  soldQuantity Int           @default(0)
+  priceInCents Int
+  status       EventStatus   @default(DRAFT)
+  organizerId  String
+  organizer    User          @relation("EventOrganizer", fields: [organizerId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  reservations Reservation[]
+  tickets      Ticket[]
+  seats        Seat[]
 
   @@index([status, startsAt])
   @@index([organizerId])
 }
 
 model Reservation {
-  id        String            @id @default(cuid())
-  eventId   String
+  id         String            @id @default(cuid())
+  eventId    String
   customerId String
-  quantity  Int
-  status    ReservationStatus @default(PENDING)
-  expiresAt DateTime
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  event     Event             @relation(fields: [eventId], references: [id])
-  customer  User              @relation(fields: [customerId], references: [id])
-  payment   Payment?
-  tickets   Ticket[]
+  quantity   Int
+  status     ReservationStatus @default(PENDING)
+  expiresAt  DateTime
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  event      Event             @relation(fields: [eventId], references: [id])
+  customer   User              @relation(fields: [customerId], references: [id])
+  payment    Payment?
+  tickets    Ticket[]
+  items      ReservationItem[]
 
   @@index([eventId, status, expiresAt])
   @@index([customerId])
+}
+
+model Seat {
+  id              String           @id @default(cuid())
+  eventId         String
+  label           String
+  row             String
+  number          Int
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reservationItem ReservationItem?
+  ticket          Ticket?
+
+  @@unique([eventId, label])
+  @@index([eventId, row, number])
+}
+
+model ReservationItem {
+  id            String      @id @default(cuid())
+  reservationId String
+  seatId        String      @unique
+  ticketType    TicketType
+  priceInCents  Int
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  seat          Seat        @relation(fields: [seatId], references: [id])
+
+  @@index([reservationId])
 }
 
 model Payment {
@@ -106,11 +139,15 @@ model Ticket {
   ownerId       String
   code          String       @unique
   status        TicketStatus @default(VALID)
+  seatId        String?      @unique
+  ticketType    TicketType   @default(FULL)
+  priceInCents  Int          @default(0)
   usedAt        DateTime?
   createdAt     DateTime     @default(now())
   event         Event        @relation(fields: [eventId], references: [id])
   reservation   Reservation  @relation(fields: [reservationId], references: [id])
   owner         User         @relation(fields: [ownerId], references: [id])
+  seat          Seat?        @relation(fields: [seatId], references: [id])
 
   @@index([eventId, status])
   @@index([reservationId])

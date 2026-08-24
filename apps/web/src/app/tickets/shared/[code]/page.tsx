@@ -10,6 +10,9 @@ import { formatDate, formatTime } from "@/lib/event";
 type SharedTicket = {
   code: string;
   status: "VALID" | "USED" | "CANCELLED";
+  ticketType: "FULL" | "HALF";
+  priceInCents: number;
+  seat?: { label: string } | null;
   event: { title: string; location: string; startsAt: string };
 };
 
@@ -84,6 +87,16 @@ export default function SharedTicketPage() {
                 {formatTime(ticket.event.startsAt)}
               </p>
               <p className="mt-2 text-black/60">{ticket.event.location}</p>
+              <div className="mt-5 flex flex-wrap gap-3 text-sm">
+                {ticket.seat && (
+                  <span className="border border-black/15 px-3 py-2 font-semibold">
+                    Poltrona {ticket.seat.label}
+                  </span>
+                )}
+                <span className="border border-black/15 px-3 py-2">
+                  {ticket.ticketType === "HALF" ? "Meia-entrada" : "Inteira"}
+                </span>
+              </div>
               <div className="mt-8 border-t border-black/15 pt-6">
                 <p className="text-xs uppercase tracking-[.12em] text-black/50">
                   Status

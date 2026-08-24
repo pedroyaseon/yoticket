@@ -20,7 +20,7 @@ export class TicketsController {
   @Get('me') mine(@CurrentUser() u: JwtPayload) {
     return this.prisma.ticket.findMany({
       where: { ownerId: u.sub },
-      include: { event: true },
+      include: { event: true, seat: true },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -30,7 +30,7 @@ export class TicketsController {
   ) {
     const ticket = await this.prisma.ticket.findFirst({
       where: { id, ownerId: u.sub },
-      include: { event: true },
+      include: { event: true, seat: true },
     });
     if (!ticket) throw new NotFoundException('Ingresso não encontrado.');
     return ticket;

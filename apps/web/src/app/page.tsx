@@ -127,7 +127,7 @@ export default function HomePage() {
                     </p>
                     <div className="mt-4 flex items-center justify-between">
                       <span className="font-semibold">
-                        {formatCurrency(featured.priceInCents)}
+                        {formatCurrency(Math.floor(featured.priceInCents / 2))}
                       </span>
                       <span className="text-xs text-[#bbb6ad]">
                         {availability(featured)} lugares
@@ -188,34 +188,41 @@ export default function HomePage() {
         </section>
 
         <section className="border-y border-[#29292d] bg-[#141416]">
-          <div className="mx-auto grid max-w-7xl gap-px bg-[#29292d] md:grid-cols-3">
-            <article className="bg-[#141416] p-8">
-              <p className="font-mono text-xs text-[#ff5c35]">01 · ESCOLHA</p>
-              <h3 className="mt-4 text-xl font-semibold">
-                Encontre sua sessão
-              </h3>
-              <p className="mt-3 leading-7 text-[#9e9990]">
-                Programação, local, horário e disponibilidade em um único lugar.
-              </p>
-            </article>
-            <article className="bg-[#141416] p-8">
-              <p className="font-mono text-xs text-[#ff5c35]">02 · COMPRE</p>
-              <h3 className="mt-4 text-xl font-semibold">
-                Checkout sem atrito
-              </h3>
-              <p className="mt-3 leading-7 text-[#9e9990]">
-                Selecione a quantidade e simule a aprovação do pagamento.
-              </p>
-            </article>
-            <article className="bg-[#141416] p-8">
-              <p className="font-mono text-xs text-[#ff5c35]">03 · ENTRE</p>
-              <h3 className="mt-4 text-xl font-semibold">
-                Seu ingresso é o QR
-              </h3>
-              <p className="mt-3 leading-7 text-[#9e9990]">
-                Abra no celular, compartilhe o link e valide na portaria.
-              </p>
-            </article>
+          <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
+            <div className="grid gap-8 lg:grid-cols-[.7fr_1.3fr] lg:items-end">
+              <div>
+                <p className="font-mono text-xs tracking-[.2em] text-[#ff5c35]">
+                  MAIS NA PROGRAMAÇÃO
+                </p>
+                <h2 className="mt-3 text-4xl font-semibold tracking-tight">
+                  Sessões para descobrir
+                </h2>
+                <p className="mt-4 max-w-md leading-7 text-[#9e9990]">
+                  Ficção científica, animação e clássicos modernos em salas com
+                  poltronas marcadas.
+                </p>
+                <div className="mt-7 flex flex-wrap gap-2 text-xs">
+                  {[
+                    "Ficção científica",
+                    "Aventura",
+                    "Animação",
+                    "Sessões especiais",
+                  ].map((genre) => (
+                    <span
+                      key={genre}
+                      className="border border-[#3a3a40] px-3 py-2 text-[#aaa59c]"
+                    >
+                      {genre}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                {events.slice(4, 6).map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       </main>

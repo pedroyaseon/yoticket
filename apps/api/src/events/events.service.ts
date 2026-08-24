@@ -6,13 +6,19 @@ import {
 import { EventStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { buildSeatMap } from './seat-map';
 
 @Injectable()
 export class EventsService {
   constructor(private readonly prisma: PrismaService) {}
   create(organizerId: string, input: CreateEventDto) {
     return this.prisma.event.create({
-      data: { ...input, startsAt: new Date(input.startsAt), organizerId },
+      data: {
+        ...input,
+        startsAt: new Date(input.startsAt),
+        organizerId,
+        seats: { create: buildSeatMap(input.capacity) },
+      },
     });
   }
   listMine(organizerId: string) {

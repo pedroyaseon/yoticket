@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -7,6 +7,17 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { ReservationsService } from './reservations.service';
+
+@Controller('events/:eventId/seats')
+export class SeatAvailabilityController {
+  constructor(private readonly reservations: ReservationsService) {}
+
+  @Get()
+  list(@Param('eventId') eventId: string) {
+    return this.reservations.listSeats(eventId);
+  }
+}
+
 @Controller('events/:eventId/reservations')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.CUSTOMER)
