@@ -1,82 +1,132 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
-
-type Event = {
-  id: string;
-  title: string;
-  location: string;
-  startsAt: string;
-  priceInCents: number;
-  posterUrl?: string | null;
-};
+import { useEffect, useState } from "react";
+import { EventCard } from "@/components/event-card";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { api } from "@/lib/api";
+import type { PublicEvent } from "@/lib/event";
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [query, setQuery] = useState('');
+  const [events, setEvents] = useState<PublicEvent[]>([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
-    api<Event[]>(`/events${query ? `?q=${encodeURIComponent(query)}` : ''}`, {
-      signal: controller.signal,
-    })
-      .then(setEvents)
-      .catch((err: unknown) => {
-        if (!(err instanceof DOMException && err.name === 'AbortError')) {
-          setError(err instanceof Error ? err.message : 'Não foi possível carregar os eventos.');
-        }
+    api<PublicEvent[]>(
+      `/events${query ? `?q=${encodeURIComponent(query)}` : ""}`,
+      { signal: controller.signal },
+    )
+      .then((items) => {
+        setEvents(items);
+        setError("");
+      })
+      .catch((reason: unknown) => {
+        if (!(reason instanceof DOMException && reason.name === "AbortError"))
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : "Não foi possível carregar os eventos.",
+          );
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
   }, [query]);
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
-      <div className="flex flex-wrap items-end justify-between gap-5">
-        <div>
-          <p className="font-mono text-xs tracking-[.2em] text-[#e76732]">YOTICKET / EM CARTAZ</p>
-          <h1 className="mt-3 text-4xl font-semibold">Próximas sessões</h1>
-        </div>
-        <Link className="border border-[#514b41] px-4 py-2 text-sm hover:border-[#e76732]" href="/my-tickets">
-          Meus ingressos
-        </Link>
-      </div>
-      <label className="mt-8 block max-w-md">
-        <span className="sr-only">Buscar evento</span>
-        <input
-          value={query}
-          onChange={(event) => {
-            setLoading(true);
-            setQuery(event.target.value);
-          }}
-          placeholder="Buscar por título"
-          className="w-full border border-[#514b41] bg-transparent px-4 py-3 outline-none focus:border-[#e76732]"
-        />
-      </label>
-      {loading && <p className="mt-8 text-[#bdb5a8]">Carregando sessões…</p>}
-      {error && <p className="mt-8 text-red-300">{error}</p>}
-      {!loading && !error && events.length === 0 && <p className="mt-8 text-[#bdb5a8]">Nenhum evento publicado foi encontrado.</p>}
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {events.map((event) => (
-          <Link href={`/events/${event.id}`} key={event.id} className="group border border-[#3d3932] bg-[#201e1a] hover:border-[#e76732]">
-            {event.posterUrl ? (
-              // TMDb fornece URLs remotas; otimização do Next seria configurada quando o domínio for fixado.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={event.posterUrl} alt={`Pôster de ${event.title}`} className="h-64 w-full object-cover opacity-85 transition group-hover:opacity-100" />
-            ) : <div className="h-64 bg-[#2b2822]" />}
-            <div className="p-5">
-              <h2 className="text-2xl font-semibold">{event.title}</h2>
-              <p className="mt-3 text-sm text-[#bdb5a8]">{new Date(event.startsAt).toLocaleString('pt-BR')}</p>
-              <p className="text-sm text-[#bdb5a8]">{event.location}</p>
-              <p className="mt-5 text-[#e76732]">R$ {(event.priceInCents / 100).toFixed(2)}</p>
+    <div className="min-h-screen bg-[#0b0b0c]">
+      <SiteHeader />
+      <main
+        className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16"
+        aria-busy={loading}
+      >
+        <section className="grid gap-8 border-b border-[#29292d] pb-10 md:grid-cols-[minmax(0,1fr)_420px] md:items-end">
+          <div>
+            <p className="font-mono text-xs tracking-[.2em] text-[#ff5c35]">
+              PROGRAMAÇÃO
+            </p>
+            <h1 className="mt-4 text-5xl font-semibold tracking-tight sm:text-6xl">
+              Eventos em cartaz
+            </h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-[#a8a39a]">
+              Sessões especiais selecionadas para você. Escolha um evento e
+              garanta seu lugar.
+            </p>
+          </div>
+          <label htmlFor="event-search">
+            <span className="mb-2 block text-xs uppercase tracking-[.14em] text-[#817d76]">
+              Buscar por título
+            </span>
+            <div className="flex border border-[#39393e] bg-[#141416] focus-within:border-[#ff5c35]">
+              <span
+                aria-hidden="true"
+                className="grid px-4 text-[#77736d] place-items-center"
+              >
+                ⌕
+              </span>
+              <input
+                id="event-search"
+                value={query}
+                onChange={(input) => {
+                  setLoading(true);
+                  setQuery(input.target.value);
+                }}
+                placeholder="Ex.: Interestelar"
+                className="w-full bg-transparent py-3 pr-4 outline-none placeholder:text-[#5d5a55]"
+              />
             </div>
-          </Link>
-        ))}
-      </div>
-    </main>
+          </label>
+        </section>
+        {loading && (
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div
+                key={index}
+                className="aspect-[3/5] animate-pulse border border-[#29292d] bg-[#141416]"
+              />
+            ))}
+          </div>
+        )}
+        {error && (
+          <p
+            role="alert"
+            className="mt-10 border border-red-400/30 bg-red-950/20 p-5 text-red-200"
+          >
+            {error}
+          </p>
+        )}
+        {!loading && !error && events.length === 0 && (
+          <div className="mt-10 border border-[#29292d] bg-[#141416] p-10 text-center">
+            <p className="text-xl font-semibold">Nenhum evento encontrado</p>
+            <p className="mt-2 text-[#9e9990]">
+              Tente buscar por outro título.
+            </p>
+          </div>
+        )}
+        {!loading && !error && events.length > 0 && (
+          <>
+            <div className="mt-10 flex items-center justify-between">
+              <p className="text-sm text-[#8f8a82]">
+                {events.length}{" "}
+                {events.length === 1
+                  ? "evento encontrado"
+                  : "eventos encontrados"}
+              </p>
+              <p className="font-mono text-xs text-[#66635e]">
+                ORDENADOS POR DATA
+              </p>
+            </div>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {events.map((event, index) => (
+                <EventCard key={event.id} event={event} priority={index < 4} />
+              ))}
+            </div>
+          </>
+        )}
+      </main>
+      <SiteFooter />
+    </div>
   );
 }

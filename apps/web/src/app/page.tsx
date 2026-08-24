@@ -1,96 +1,225 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
-
-type Event = {
-  id: string;
-  title: string;
-  location: string;
-  startsAt: string;
-  priceInCents: number;
-  posterUrl?: string | null;
-};
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { EventCard } from "@/components/event-card";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import {
+  availability,
+  formatCurrency,
+  formatDate,
+  formatTime,
+  type PublicEvent,
+} from "@/lib/event";
+import { api } from "@/lib/api";
 
 export default function HomePage() {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<PublicEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api<Event[]>('/events')
-      .then((items) => setEvents(items.slice(0, 3)))
-      .catch(() => setEvents([]))
+    api<PublicEvent[]>("/events")
+      .then(setEvents)
+      .catch((reason: unknown) =>
+        setError(
+          reason instanceof Error
+            ? reason.message
+            : "Não foi possível carregar a programação.",
+        ),
+      )
       .finally(() => setLoading(false));
   }, []);
 
+  const featured = events[0];
+
   return (
-    <main className="min-h-full bg-[#151412] text-[#f7f2e8]">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Link href="/" className="font-mono text-sm tracking-[.22em] text-[#e76732]">
-          YOTICKET
-        </Link>
-        <nav aria-label="Navegação principal" className="flex items-center gap-5 text-sm">
-          <Link href="/events" className="text-[#d8d0c2] hover:text-[#e76732]">
-            Eventos
-          </Link>
-          <Link href="/login" className="border border-[#514b41] px-3 py-2 hover:border-[#e76732]">
-            Entrar
-          </Link>
-        </nav>
-      </header>
-
-      <section className="mx-auto grid max-w-6xl gap-10 px-6 pb-16 pt-12 md:grid-cols-[1.1fr_.9fr] md:items-end md:pt-24">
-        <div className="border-l-2 border-[#e76732] pl-6">
-          <p className="font-mono text-xs tracking-[.22em] text-[#e76732]">
-            CINEMA, EVENTOS E ENTRADA SEM FILA
-          </p>
-          <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-tight sm:text-6xl">
-            Escolha a sessão. Garanta seu ingresso.
-          </h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-[#c8c1b6]">
-            Descubra experiências em cartaz, compre com segurança e apresente seu QR Code na entrada.
-          </p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <Link href="/events" className="bg-[#e76732] px-5 py-3 font-semibold text-[#151412] hover:bg-[#f17b48]">
-              Ver sessões
-            </Link>
-            <Link href="/login" className="border border-[#514b41] px-5 py-3 hover:border-[#e76732]">
-              Acessar minha conta
-            </Link>
-          </div>
-        </div>
-        <aside className="border border-[#3d3932] bg-[#201e1a] p-6">
-          <p className="font-mono text-xs tracking-[.18em] text-[#e76732]">COMO FUNCIONA</p>
-          <ol className="mt-6 space-y-5 text-[#d8d0c2]">
-            <li><span className="mr-3 font-mono text-[#e76732]">01</span>Encontre uma sessão publicada.</li>
-            <li><span className="mr-3 font-mono text-[#e76732]">02</span>Reserve e simule o pagamento.</li>
-            <li><span className="mr-3 font-mono text-[#e76732]">03</span>Apresente o QR Code na portaria.</li>
-          </ol>
-        </aside>
-      </section>
-
-      <section className="border-t border-[#3d3932] bg-[#1b1916]">
-        <div className="mx-auto max-w-6xl px-6 py-12">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="font-mono text-xs tracking-[.2em] text-[#e76732]">EM CARTAZ</p>
-              <h2 className="mt-3 text-3xl font-semibold">Próximas sessões</h2>
+    <div className="min-h-screen bg-[#0b0b0c]">
+      <SiteHeader />
+      <main>
+        <section className="relative isolate min-h-[620px] overflow-hidden border-b border-[#29292d]">
+          {featured?.posterUrl && (
+            <Image
+              src={featured.posterUrl}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="-z-20 object-cover object-center opacity-30 blur-[1px]"
+            />
+          )}
+          <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#0b0b0c_5%,rgba(11,11,12,.94)_40%,rgba(11,11,12,.45)_75%,#0b0b0c_100%)]" />
+          <div className="mx-auto grid min-h-[620px] max-w-7xl items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_330px]">
+            <div className="max-w-3xl">
+              <p className="font-mono text-xs font-semibold tracking-[.22em] text-[#ff5c35]">
+                BILHETERIA DIGITAL · PROGRAMAÇÃO 2026
+              </p>
+              <h1 className="mt-6 text-5xl font-semibold leading-[.98] tracking-[-.04em] sm:text-7xl">
+                Seu próximo grande evento começa aqui.
+              </h1>
+              <p className="mt-7 max-w-2xl text-lg leading-8 text-[#bbb6ad]">
+                Escolha a sessão, reserve seus ingressos e entre com o QR Code
+                no celular. Um fluxo curto, seguro e sem filas.
+              </p>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Link
+                  href="/events"
+                  className="bg-[#ff5c35] px-6 py-3.5 font-semibold text-black hover:bg-[#ff7655]"
+                >
+                  Explorar eventos
+                </Link>
+                <Link
+                  href="/my-tickets"
+                  className="border border-[#4a4a50] bg-black/20 px-6 py-3.5 font-semibold hover:border-white"
+                >
+                  Meus ingressos
+                </Link>
+              </div>
+              <div className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-white/10 pt-6">
+                <div>
+                  <p className="text-2xl font-semibold">
+                    {events.length || "—"}
+                  </p>
+                  <p className="mt-1 text-xs text-[#8f8a82]">sessões abertas</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold">QR</p>
+                  <p className="mt-1 text-xs text-[#8f8a82]">entrada digital</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold">24h</p>
+                  <p className="mt-1 text-xs text-[#8f8a82]">
+                    acesso ao ingresso
+                  </p>
+                </div>
+              </div>
             </div>
-            <Link href="/events" className="text-sm text-[#e76732] underline underline-offset-4">Ver todos os eventos</Link>
-          </div>
-          {loading && <p className="mt-8 text-[#bdb5a8]">Carregando sessões…</p>}
-          {!loading && events.length === 0 && <p className="mt-8 text-[#bdb5a8]">Acesse os eventos para consultar a programação disponível.</p>}
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
-              <Link href={`/events/${event.id}`} key={event.id} className="group border border-[#3d3932] bg-[#201e1a] hover:border-[#e76732]">
-                <div role="img" aria-label={`Pôster de ${event.title}`} className="h-52 bg-[#2b2822] bg-cover bg-center" style={event.posterUrl ? { backgroundImage: `url(${event.posterUrl})` } : undefined} />
-                <div className="p-5"><h3 className="text-2xl font-semibold">{event.title}</h3><p className="mt-3 text-sm text-[#bdb5a8]">{new Date(event.startsAt).toLocaleString('pt-BR')}</p><p className="text-sm text-[#bdb5a8]">{event.location}</p><p className="mt-5 text-[#e76732]">R$ {(event.priceInCents / 100).toFixed(2)}</p></div>
+            {featured && (
+              <Link
+                href={`/events/${featured.id}`}
+                className="group hidden overflow-hidden border border-white/15 bg-[#141416] shadow-2xl lg:block"
+              >
+                <div className="relative aspect-[3/4] overflow-hidden">
+                  {featured.posterUrl && (
+                    <Image
+                      src={featured.posterUrl}
+                      alt={`Pôster de ${featured.title}`}
+                      fill
+                      sizes="330px"
+                      className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                    />
+                  )}
+                  <p className="absolute left-4 top-4 bg-[#ff5c35] px-3 py-1.5 font-mono text-[11px] font-bold text-black">
+                    EVENTO EM DESTAQUE
+                  </p>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-5 pt-20">
+                    <p className="font-mono text-xs text-[#ff7a59]">
+                      {formatDate(featured.startsAt)} ·{" "}
+                      {formatTime(featured.startsAt)}
+                    </p>
+                    <h2 className="mt-2 text-2xl font-semibold">
+                      {featured.title}
+                    </h2>
+                    <p className="mt-2 text-sm text-[#bbb6ad]">
+                      {featured.location}
+                    </p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="font-semibold">
+                        {formatCurrency(featured.priceInCents)}
+                      </span>
+                      <span className="text-xs text-[#bbb6ad]">
+                        {availability(featured)} lugares
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </Link>
-            ))}
+            )}
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="font-mono text-xs tracking-[.2em] text-[#ff5c35]">
+                TOP EVENTOS
+              </p>
+              <h2 className="mt-3 text-4xl font-semibold tracking-tight">
+                Mais aguardados
+              </h2>
+            </div>
+            <Link
+              href="/events"
+              className="text-sm font-medium text-[#ff7a59] hover:text-white"
+            >
+              Ver programação completa →
+            </Link>
+          </div>
+          {loading && (
+            <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div
+                  key={index}
+                  className="aspect-[3/5] animate-pulse border border-[#29292d] bg-[#141416]"
+                />
+              ))}
+            </div>
+          )}
+          {error && (
+            <div
+              role="alert"
+              className="mt-9 flex flex-wrap items-center justify-between gap-4 border border-red-400/30 bg-red-950/20 p-5"
+            >
+              <p className="text-red-200">{error}</p>
+              <Link href="/events" className="text-sm text-[#ff7a59] underline">
+                Tentar no catálogo
+              </Link>
+            </div>
+          )}
+          {!loading && !error && (
+            <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {events.slice(0, 4).map((event, index) => (
+                <EventCard key={event.id} event={event} priority={index < 2} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="border-y border-[#29292d] bg-[#141416]">
+          <div className="mx-auto grid max-w-7xl gap-px bg-[#29292d] md:grid-cols-3">
+            <article className="bg-[#141416] p-8">
+              <p className="font-mono text-xs text-[#ff5c35]">01 · ESCOLHA</p>
+              <h3 className="mt-4 text-xl font-semibold">
+                Encontre sua sessão
+              </h3>
+              <p className="mt-3 leading-7 text-[#9e9990]">
+                Programação, local, horário e disponibilidade em um único lugar.
+              </p>
+            </article>
+            <article className="bg-[#141416] p-8">
+              <p className="font-mono text-xs text-[#ff5c35]">02 · COMPRE</p>
+              <h3 className="mt-4 text-xl font-semibold">
+                Checkout sem atrito
+              </h3>
+              <p className="mt-3 leading-7 text-[#9e9990]">
+                Selecione a quantidade e simule a aprovação do pagamento.
+              </p>
+            </article>
+            <article className="bg-[#141416] p-8">
+              <p className="font-mono text-xs text-[#ff5c35]">03 · ENTRE</p>
+              <h3 className="mt-4 text-xl font-semibold">
+                Seu ingresso é o QR
+              </h3>
+              <p className="mt-3 leading-7 text-[#9e9990]">
+                Abra no celular, compartilhe o link e valide na portaria.
+              </p>
+            </article>
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
