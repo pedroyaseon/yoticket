@@ -51,15 +51,11 @@ NEXT_PUBLIC_API_URL=/api
 WEB_ORIGIN=https://<nome-do-site>.netlify.app
 ```
 
-O build de produção executa `prisma migrate deploy` antes de compilar. Deploy
-Previews apenas geram o Prisma Client e compilam a aplicação, evitando que uma
-PR aplique migrations no banco de produção. Após o primeiro deploy, execute o
-seed uma única vez a partir de um ambiente confiável com `DATABASE_URL`
-apontando para o Neon:
-
-```bash
-npm run seed
-```
+O build de produção executa `prisma migrate deploy` e o seed idempotente antes
+de compilar. Deploy Previews apenas geram o Prisma Client e compilam a
+aplicação, evitando que uma PR altere o banco de produção. O seed usa `upsert`
+para manter as contas e a programação de demonstração sem apagar reservas,
+pagamentos ou ingressos existentes.
 
 O handler NestJS é reutilizado enquanto a Function permanece aquecida. Regras
 críticas de concorrência continuam protegidas por transações e constraints no

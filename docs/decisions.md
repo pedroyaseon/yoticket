@@ -185,8 +185,10 @@ Netlify Function inicializa o mesmo app sem abrir porta. O handler é armazenado
 em cache por instância aquecida. O PostgreSQL 16 fica no Neon, em AWS US East 2,
 usando a connection string com pooling.
 
-O build de produção aplica migrations existentes com `prisma migrate deploy`.
-Deploy Previews não aplicam migrations e o seed é uma operação inicial explícita.
+O build de produção aplica migrations existentes com `prisma migrate deploy` e
+executa o seed idempotente. Deploy Previews não alteram o banco. O seed atualiza
+somente contas e sessões determinísticas de demonstração com `upsert`, cria
+assentos apenas quando ausentes e não apaga reservas, pagamentos ou ingressos.
 
 ### Alternativas consideradas
 
