@@ -15,15 +15,21 @@ import { UsersModule } from '../users/users.module';
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.getOrThrow<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: config.get<string>(
-            'JWT_EXPIRES_IN',
-            '1h',
-          ) as ms.StringValue,
-        },
-      }),
+      useFactory: (config: ConfigService) => {
+        const secret = config.getOrThrow<string>('JWT_SECRET');
+        if (Buffer.byteLength(secret, 'utf8') < 32) {
+          throw new Error('JWT_SECRET deve possuir ao menos 32 bytes.');
+        }
+        return {
+          secret,
+          signOptions: {
+            expiresIn: config.get<string>(
+              'JWT_EXPIRES_IN',
+              '1h',
+            ) as ms.StringValue,
+          },
+        };
+      },
     }),
   ],
   controllers: [AuthController],

@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
@@ -42,6 +42,29 @@ describe('AuthService', () => {
 
     await expect(
       service.login({ email: 'missing@demo.com', password: 'demo123' }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('rejects passwords that exceed the bcrypt byte limit', async () => {
+    await expect(
+      service.register({
+        email: 'customer@demo.com',
+        password: 'á'.repeat(37),
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(users.findByEmail.mock.calls).toHaveLength(0);
+    expect(users.createCustomer.mock.calls).toHaveLength(0);
+  });
+
+  it('keeps an oversized login indistinguishable from invalid credentials', async () => {
+    users.findByEmail.mockResolvedValue(null);
+
+    await expect(
+      service.login({
+        email: 'missing@demo.com',
+        password: 'á'.repeat(37),
+      }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });

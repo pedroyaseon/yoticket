@@ -1,7 +1,9 @@
 {
   "name": "yoticket",
   "private": true,
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "dev:web": "npm run dev --workspace=@yoticket/web",
     "dev:api": "npm run start:dev --workspace=@yoticket/api",
@@ -11,5 +13,10 @@
     "prisma:generate": "npm run prisma:generate --workspace=@yoticket/api",
     "prisma:migrate": "npm run prisma:migrate --workspace=@yoticket/api",
     "seed": "npm run prisma:seed --workspace=@yoticket/api"
+  },
+  "dependencies": {
+    "@nestjs/platform-express": "11.2.1",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1"
   }
 }
