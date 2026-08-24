@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import {
+  ScheduleFields,
+  sessionStartsAtFrom,
+} from "@/components/schedule-fields";
 import { api } from "@/lib/api";
 import type { Venue } from "@/lib/movie";
 
@@ -76,7 +80,8 @@ export default function NewEventPage() {
     setError("");
     const data = new FormData(event.currentTarget);
     try {
-      const created = await api<{ id: string }>("/events", {
+      const startsAt = sessionStartsAtFrom(data);
+      await api<{ count: number; firstEventId: string }>("/events/schedule", {
         method: "POST",
         body: JSON.stringify({
           externalId: selected.externalId,
@@ -84,13 +89,12 @@ export default function NewEventPage() {
           description: selected.description || "Sessão especial de cinema.",
           posterUrl: selected.posterUrl || undefined,
           location: data.get("location"),
-          startsAt: new Date(String(data.get("startsAt"))).toISOString(),
+          startsAt,
           capacity: Number(data.get("capacity")),
           priceInCents: Math.round(Number(data.get("price")) * 100),
         }),
       });
-      await api(`/events/${created.id}/publish`, { method: "POST" });
-      router.push(`/organizer/events/${created.id}`);
+      router.push("/organizer/events");
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -117,11 +121,11 @@ export default function NewEventPage() {
             CATÁLOGO DO ORGANIZADOR
           </p>
           <h1 className="mt-4 text-4xl font-semibold sm:text-5xl">
-            Adicionar uma sessão
+            Adicionar filme à programação
           </h1>
           <p className="mt-4 max-w-2xl text-[#9e9990]">
             Escolha um filme em cartaz ou pesquise na TMDb e configure onde e
-            quando ele será exibido.
+            por quanto tempo e em quais horários ele será exibido.
           </p>
         </div>
 
@@ -252,81 +256,16 @@ export default function NewEventPage() {
             </div>
             <div>
               <p className="font-mono text-xs tracking-[.16em] text-[#ff5c35]">
-                CONFIGURAR SESSÃO
+                CONFIGURAR PROGRAMAÇÃO
               </p>
               <h2 className="mt-3 text-3xl font-semibold">{selected.title}</h2>
-              <div className="mt-7 grid gap-5">
-                <label htmlFor="location">
-                  <span className="mb-2 block text-sm text-[#bbb6ad]">
-                    Local
-                  </span>
-                  <input
-                    key={venues[0]?.name}
-                    required
-                    id="location"
-                    name="location"
-                    list="venue-options"
-                    defaultValue={venues[0]?.name}
-                    placeholder="Nome do cinema ou espaço"
-                    className="w-full border border-[#39393e] bg-[#0b0b0c] p-3.5"
-                  />
-                  <datalist id="venue-options">
-                    {venues.map((venue) => (
-                      <option key={venue.slug} value={venue.name} />
-                    ))}
-                  </datalist>
-                </label>
-                <label htmlFor="startsAt">
-                  <span className="mb-2 block text-sm text-[#bbb6ad]">
-                    Data e horário
-                  </span>
-                  <input
-                    required
-                    id="startsAt"
-                    name="startsAt"
-                    type="datetime-local"
-                    min={new Date().toISOString().slice(0, 16)}
-                    className="w-full border border-[#39393e] bg-[#0b0b0c] p-3.5"
-                  />
-                </label>
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <label htmlFor="capacity">
-                    <span className="mb-2 block text-sm text-[#bbb6ad]">
-                      Capacidade
-                    </span>
-                    <input
-                      required
-                      id="capacity"
-                      name="capacity"
-                      min="1"
-                      type="number"
-                      defaultValue="96"
-                      className="w-full border border-[#39393e] bg-[#0b0b0c] p-3.5"
-                    />
-                  </label>
-                  <label htmlFor="price">
-                    <span className="mb-2 block text-sm text-[#bbb6ad]">
-                      Inteira (R$)
-                    </span>
-                    <input
-                      required
-                      id="price"
-                      name="price"
-                      min="0"
-                      step="0.01"
-                      type="number"
-                      defaultValue="40.00"
-                      className="w-full border border-[#39393e] bg-[#0b0b0c] p-3.5"
-                    />
-                  </label>
-                </div>
-              </div>
+              <ScheduleFields venues={venues} />
               <div className="mt-7 flex flex-wrap items-center gap-4">
                 <button
                   disabled={creating}
                   className="bg-[#ff5c35] px-6 py-3.5 font-semibold text-black disabled:opacity-50"
                 >
-                  {creating ? "Publicando…" : "Adicionar e publicar"}
+                  {creating ? "Criando programação…" : "Criar programação"}
                 </button>
                 <p className="text-sm text-[#77736d]">
                   Meia-entrada será calculada automaticamente.

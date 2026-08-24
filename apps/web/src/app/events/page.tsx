@@ -9,9 +9,17 @@ import type { MovieSummary } from "@/lib/movie";
 
 export default function EventsPage() {
   const [movies, setMovies] = useState<MovieSummary[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [resolvedQuery, setResolvedQuery] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const loading = resolvedQuery === null;
+  const searching = resolvedQuery !== null && query !== resolvedQuery;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setQuery(searchTerm.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -22,16 +30,18 @@ export default function EventsPage() {
       .then((items) => {
         setMovies(items);
         setError("");
+        setResolvedQuery(query);
       })
       .catch((reason: unknown) => {
-        if (!(reason instanceof DOMException && reason.name === "AbortError"))
+        if (!(reason instanceof DOMException && reason.name === "AbortError")) {
           setError(
             reason instanceof Error
               ? reason.message
               : "Não foi possível carregar os filmes.",
           );
-      })
-      .finally(() => setLoading(false));
+          setResolvedQuery(query);
+        }
+      });
     return () => controller.abort();
   }, [query]);
 
@@ -40,7 +50,7 @@ export default function EventsPage() {
       <SiteHeader />
       <main
         className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16"
-        aria-busy={loading}
+        aria-busy={loading || searching}
       >
         <section className="grid gap-8 border-b border-[#29292d] pb-10 md:grid-cols-[minmax(0,1fr)_420px] md:items-end">
           <div>
@@ -59,23 +69,31 @@ export default function EventsPage() {
             <span className="mb-2 block text-xs uppercase tracking-[.14em] text-[#817d76]">
               Buscar por título
             </span>
-            <div className="flex border border-[#39393e] bg-[#141416] focus-within:border-[#ff5c35]">
+            <div className="relative">
               <span
                 aria-hidden="true"
-                className="grid px-4 text-[#77736d] place-items-center"
+                className="pointer-events-none absolute inset-y-0 left-0 grid w-11 place-items-center text-[#77736d]"
               >
                 ⌕
               </span>
               <input
                 id="event-search"
-                value={query}
-                onChange={(input) => {
-                  setLoading(true);
-                  setQuery(input.target.value);
-                }}
+                value={searchTerm}
+                onChange={(input) => setSearchTerm(input.target.value)}
                 placeholder="Ex.: Interestelar"
-                className="w-full bg-transparent py-3 pr-4 outline-none placeholder:text-[#5d5a55]"
+                autoComplete="off"
+                className="w-full appearance-none border border-[#39393e] bg-[#141416] py-3 pl-11 pr-11 outline-none transition placeholder:text-[#5d5a55] focus:border-[#ff5c35] focus:outline-none focus:ring-0"
               />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm("")}
+                  aria-label="Limpar busca"
+                  className="absolute right-0 top-0 grid h-full w-11 place-items-center text-[#77736d] hover:text-white"
+                >
+                  ×
+                </button>
+              )}
             </div>
           </label>
         </section>
@@ -107,18 +125,21 @@ export default function EventsPage() {
         )}
         {!loading && !error && movies.length > 0 && (
           <>
-            <div className="mt-10 flex items-center justify-between">
+            <div className="mt-10 flex min-h-5 items-center justify-between">
               <p className="text-sm text-[#8f8a82]">
-                {movies.length}{" "}
-                {movies.length === 1
-                  ? "filme encontrado"
-                  : "filmes encontrados"}
+                {searching
+                  ? "Buscando…"
+                  : `${movies.length} ${
+                      movies.length === 1
+                        ? "filme encontrado"
+                        : "filmes encontrados"
+                    }`}
               </p>
-              <p className="font-mono text-xs text-[#66635e]">
-                EM CARTAZ
-              </p>
+              <p className="font-mono text-xs text-[#66635e]">EM CARTAZ</p>
             </div>
-            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div
+              className={`mt-5 grid gap-5 transition-opacity sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${searching ? "opacity-50" : "opacity-100"}`}
+            >
               {movies.map((movie, index) => (
                 <MovieCard key={movie.key} movie={movie} priority={index < 4} />
               ))}
